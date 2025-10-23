@@ -380,9 +380,9 @@ function Vehiculos({ usuario }) {
 
       {/* Grid de Vehículos */}
       <div style={{ maxWidth: '900px', margin: '0 auto' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+        <div style={{ border: '40px solid transparent', display: 'grid', gridTemplateColumns: 'repeat(3, 400px)', gap: '12px' }}>
         {vehiculos.map((vehiculo) => (
-          <div key={vehiculo.id_vehiculo} className="bg-white rounded-xl overflow-hidden hover:shadow-xl transition-all duration-300 border border-gray-100">
+           <div key={vehiculo.id_vehiculo} className="bg-white rounded-xl overflow-hidden hover:shadow-2xl transition-all duration-300 border border-gray-100">
             {/* Imagen con badge de estado */}
             <div className="relative h-36 bg-gray-100 overflow-hidden">
               {vehiculo.imagen_url ? (
