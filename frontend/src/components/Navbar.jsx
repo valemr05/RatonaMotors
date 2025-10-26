@@ -1,59 +1,64 @@
-function Navbar({ currentPage, setCurrentPage, usuario, onLogout }) {
+import { useNavigate, useLocation } from 'react-router-dom';
+import './Navbar.css';
+
+function Navbar({ usuario, onLogout }) {
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const menuItems = [
-    { id: 'home', label: 'Inicio', icon: '🏠' },
-    { id: 'vehiculos', label: 'Vehículos', icon: '🚗' },
-    { id: 'clientes', label: 'Clientes', icon: '👥' },
-    { id: 'ventas', label: 'Ventas', icon: '💰' },
+    { path: '/', label: 'Inicio', icon: 'home' },
+    { path: '/vehiculos', label: 'Vehículos', icon: 'directions_car' },
+    { path: '/clientes', label: 'Clientes', icon: 'group' },
+    { path: '/formulario-vehiculo', label: 'Agregar Vehículo', icon: 'add_circle' },
+    { path: '/ventas', label: 'Ventas', icon: 'receipt_long' },
   ];
 
   return (
-    <nav className="bg-blue-600 text-white shadow-lg">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <div className="flex items-center space-x-2">
-            <span className="text-2xl">🏁</span>
-            <span className="text-xl font-bold">RatonaMotors</span>
+    <aside className="navbar-sidebar">
+      <div className="navbar-content">
+        {/* Header con Logo */}
+        <div className="navbar-header">
+          <div className="navbar-logo-container">
+            <div 
+              className="navbar-logo" 
+              style={{ backgroundImage: 'url("/src/assets/minnieBL.png")' }}
+            />
+            <div className="navbar-title">
+              <h1 className="navbar-brand">RatonaMotors</h1>
+              <p className="navbar-subtitle">Panel de Control</p>
+            </div>
           </div>
 
           {/* Menu Items */}
-          <div className="flex space-x-1">
+          <nav className="navbar-menu">
             {menuItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => setCurrentPage(item.id)}
-                className={`px-4 py-2 rounded-lg transition-colors ${
-                  currentPage === item.id
-                    ? 'bg-blue-700 font-semibold'
-                    : 'hover:bg-blue-500'
+              <a
+                key={item.path}
+                onClick={() => navigate(item.path)}
+                className={`navbar-item ${
+                  location.pathname === item.path ? 'active' : ''
                 }`}
               >
-                <span className="mr-2">{item.icon}</span>
-                {item.label}
-              </button>
+                <span className="material-symbols-outlined">{item.icon}</span>
+                <p>{item.label}</p>
+              </a>
             ))}
-          </div>
+          </nav>
+        </div>
 
-          {/* User Info */}
-          <div className="flex items-center space-x-4">
-            <div className="text-right">
-              <div className="text-sm font-semibold">
-                {usuario.nombre} {usuario.apellido}
-              </div>
-              <div className="text-xs text-blue-200 capitalize">
-                {usuario.rol}
-              </div>
-            </div>
-            <button
-              onClick={onLogout}
-              className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg transition-colors"
-            >
-              Cerrar Sesión
-            </button>
+        {/* Footer con Usuario */}
+        <div className="navbar-footer">
+          <div className="navbar-user">
+            <span className="material-symbols-outlined">account_circle</span>
+            <p>{usuario.nombre} {usuario.apellido}</p>
+          </div>
+          <div className="navbar-logout" onClick={onLogout}>
+            <span className="material-symbols-outlined">logout</span>
+            <p>Cerrar Sesión</p>
           </div>
         </div>
       </div>
-    </nav>
+    </aside>
   );
 }
 

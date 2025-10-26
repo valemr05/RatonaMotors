@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { login } from '../services/api';
+import './Login.css';
 
 function Login({ onLogin }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -23,71 +25,112 @@ function Login({ onLogin }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="text-6xl mb-4">🏁</div>
-          <h1 className="text-3xl font-bold text-gray-800">RatonaMotors</h1>
-          <p className="text-gray-600 mt-2">Sistema de Gestión de Concesionario</p>
-        </div>
-
-        {/* Formulario */}
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Email */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Correo Electrónico
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
-              placeholder="tu@email.com"
-            />
-          </div>
-
-          {/* Password */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Contraseña
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
-              placeholder="••••••••"
-            />
-          </div>
-
-          {/* Error Message */}
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-              {error}
-            </div>
-          )}
-
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition-colors disabled:bg-gray-400"
-          >
-            {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
-          </button>
-        </form>
-
-        {/* Credenciales de prueba */}
-        <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-          <p className="text-xs text-gray-600 font-semibold mb-2">Credenciales de prueba:</p>
-          <p className="text-xs text-gray-500">Admin: admin@ratonamotors.com / admin123</p>
-          <p className="text-xs text-gray-500">Empleado: maria@ratonamotors.com / empleado123</p>
-        </div>
+    <div className="login-container">
+      {/* Background Image */}
+      <div className="login-background">
+        <img
+          src="https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=1200"
+          alt="Car interior background"
+        />
+        <div className="login-overlay"></div>
       </div>
+
+      {/* Main Content */}
+      <div className="login-content">
+        {/* Header */}
+        <div className="login-header flex items-center justify-center gap-2 mb-6">
+          <img
+            src="/src/assets/minnieBL.png"
+            alt="Logo Ratona Motors"
+            style={{ width: '50px', height: '46px' }}
+            className=" object-contain"
+          />
+          <h2 className="login-brand text-2xl font-bold text-white tracking-wide">RatonaMotors</h2>
+        </div>
+
+        {/* Login Form Card */}
+        <div className="login-card">
+          <h1 className="login-title">Login</h1>
+          <p className="login-subtitle">Bienvenido! Por favor ingresa tus datos.</p>
+
+          <form onSubmit={handleSubmit} className="login-form">
+            {/* Email Field */}
+            <div className="form-group">
+              <label className="form-label">Email</label>
+              <input
+                className="form-input"
+                placeholder="Ingresa tu email"
+                type="text"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+
+            {/* Password Field */}
+            <div className="form-group">
+              <div className="form-label-row">
+                <label className="form-label">Contraseña</label>
+              </div>
+              <div className="password-input-wrapper">
+                <input
+                  className="form-input"
+                  placeholder="Ingresa tu contraseña"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="password-toggle"
+                >
+                  {showPassword ? '👁️' : '👁️‍🗨️'}
+                </button>
+              </div>
+            </div>
+
+            {/* Error Message */}
+            {error && (
+              <div className="error-message">
+                {error}
+              </div>
+            )}
+
+            {/* Login Button */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="login-button"
+            >
+              {loading ? 'Cargando...' : 'Iniciar Sesión'}
+            </button>
+
+          </form>
+
+          {/* Credenciales */}
+          <div className="credentials-box">
+            <p className="credentials-title">Credenciales de prueba:</p>
+            <p className="credentials-text">Admin: admin@ratonamotors.com / admin123</p>
+            <p className="credentials-text">Empleado: maria@ratonamotors.com / empleado123</p>
+          </div>
+        </div>
+
+        {/* Sign Up Link */}
+        <p className="signup-text">
+          No tienes cuenta? <a className="signup-link" href="#">Registrarse</a>
+        </p>
+      </div>
+
+      {/* Footer */}
+      <footer className="login-footer">
+        <p className="footer-copyright">© 2024 RatonaMotors. All rights reserved.</p>
+        <div className="footer-links">
+          <a href="#">Terms of Service</a>
+          <a href="#">Privacy Policy</a>
+        </div>
+      </footer>
     </div>
   );
 }

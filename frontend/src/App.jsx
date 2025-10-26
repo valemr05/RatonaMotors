@@ -1,56 +1,40 @@
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { useState } from 'react';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import Vehiculos from './pages/Vehiculos';
+import VehiculoDetalle from './pages/VehiculoDetalle';
 import Clientes from './pages/Clientes';
 import Ventas from './pages/Ventas';
 import Login from './components/Login';
+import FormularioVehiculo from './pages/FormularioVehiculo';
+import './App.css';
 
 function App() {
-  const [currentPage, setCurrentPage] = useState('home');
   const [usuario, setUsuario] = useState(null);
 
-  const handleLogin = (userData) => {
-    setUsuario(userData);
-    setCurrentPage('home');
-  };
+  const handleLogin = (userData) => setUsuario(userData);
+  const handleLogout = () => setUsuario(null);
 
-  const handleLogout = () => {
-    setUsuario(null);
-    setCurrentPage('home');
-  };
-
-  // Si no hay usuario logueado, mostrar login
-  if (!usuario) {
-    return <Login onLogin={handleLogin} />;
-  }
-
-  // Renderizar página según selección
-  const renderPage = () => {
-    switch (currentPage) {
-      case 'home':
-        return <Home usuario={usuario} />;
-      case 'vehiculos':
-        return <Vehiculos usuario={usuario} />;
-      case 'clientes':
-        return <Clientes usuario={usuario} />;
-      case 'ventas':
-        return <Ventas usuario={usuario} />;
-      default:
-        return <Home usuario={usuario} />;
-    }
-  };
+  // Si no hay usuario logueado → solo mostrar Login
+  if (!usuario) return <Login onLogin={handleLogin} />;
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <Navbar 
-        currentPage={currentPage}
-        setCurrentPage={setCurrentPage}
-        usuario={usuario}
-        onLogout={handleLogout}
-      />
-      <main className="container mx-auto px-4 py-8">
-        {renderPage()}
+    <div className="flex min-h-screen">
+      <Navbar usuario={usuario} onLogout={handleLogout} />
+
+      <main className="flex-1 p-8 overflow-y-auto">
+        <Routes>
+          <Route path="/" element={<Home usuario={usuario} />} />
+          <Route path="/vehiculos" element={<Vehiculos usuario={usuario} />} />
+          <Route path="/vehiculos/:id" element={<VehiculoDetalle usuario={usuario} />} />
+          <Route path="/clientes" element={<Clientes usuario={usuario} />} />
+          <Route path="/formulario-vehiculo" element={<FormularioVehiculo usuario={usuario} />} />
+          <Route path="/ventas" element={<Ventas usuario={usuario} />} />
+
+          {/* Si no existe la ruta, redirige al home */}
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
       </main>
     </div>
   );

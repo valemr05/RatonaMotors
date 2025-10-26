@@ -1,0 +1,136 @@
+/* Navbar Sidebar */
+.navbar-sidebar {
+  width: 16rem; /* 64 = 16rem */
+  flex-shrink: 0;
+  background-color: #111a22;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 100vh;
+}
+
+.navbar-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+}
+
+.navbar-header {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* Logo Container */
+.navbar-logo-container {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+}
+
+.navbar-logo {
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  border-radius: 9999px;
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+.navbar-title {
+  display: flex;
+  flex-direction: column;
+}
+
+.navbar-brand {
+  color: white;
+  font-size: 1rem;
+  font-weight: bold;
+  line-height: normal;
+}
+
+.navbar-subtitle {
+  color: #daacd7;
+  font-size: 0.875rem;
+  font-weight: normal;
+  line-height: normal;
+}
+
+/* Menu Items */
+.navbar-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.navbar-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  transition: background-color 0.2s;
+  cursor: pointer;
+}
+
+.navbar-item:hover {
+  background-color: #372241;
+}
+
+.navbar-item.active {
+  background-color: #47294e;
+}
+
+.navbar-item .material-symbols-outlined {
+  color: white;
+  font-size: 1.5rem;
+}
+
+.navbar-item p {
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: normal;
+  margin: 0;
+}
+
+/* Footer */
+.navbar-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.navbar-user,
+.navbar-logout {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  transition: background-color 0.2s;
+  cursor: pointer;
+}
+
+.navbar-user:hover,
+.navbar-logout:hover {
+  background-color: #693f7c;
+}
+
+.navbar-user .material-symbols-outlined,
+.navbar-logout .material-symbols-outlined {
+  color: white;
+  font-size: 1.5rem;
+}
+
+.navbar-user p,
+.navbar-logout p {
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: normal;
+  margin: 0;
+}

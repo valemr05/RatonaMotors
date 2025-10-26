@@ -1,132 +1,127 @@
 import { useState, useEffect } from 'react';
-import { getVehiculos, getClientes, getVentas } from '../services/api';
+import { getDashboardStats, getDashboardActivities } from '../services/api';
+import './Home.css';
 
 function Home({ usuario }) {
-  const [stats, setStats] = useState({
-    vehiculos: 0,
-    clientes: 0,
-    ventas: 0,
-    inventarioValor: 0
-  });
+  const [stats, setStats] = useState([]);
+  const [activities, setActivities] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    loadStats();
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        
+        // Obtener datos de la API
+        const statsData = await getDashboardStats();
+        const activitiesData = await getDashboardActivities();
+        
+        setStats(statsData);
+        setActivities(activitiesData);
+        setError(null);
+        
+      } catch (err) {
+        setError(err.message);
+        console.error('Error al obtener datos del dashboard:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
   }, []);
 
-  const loadStats = async () => {
-    try {
-      const [vehiculos, clientes, ventas] = await Promise.all([
-        getVehiculos(),
-        getClientes(),
-        getVentas()
-      ]);
+  if (loading) {
+    return <div className="loading">Cargando datos...</div>;
+  }
 
-      const inventarioValor = vehiculos.reduce((sum, v) => sum + parseFloat(v.precio), 0);
-
-      setStats({
-        vehiculos: vehiculos.length,
-        clientes: clientes.length,
-        ventas: ventas.length,
-        inventarioValor
-      });
-    } catch (error) {
-      console.error('Error al cargar estadísticas:', error);
-    }
-  };
-
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat('es-CO', {
-      style: 'currency',
-      currency: 'COP',
-      minimumFractionDigits: 0
-    }).format(value);
-  };
-
-  const cards = [
-    {
-      title: 'Vehículos en Inventario',
-      value: stats.vehiculos,
-      icon: '🚗',
-      color: 'bg-blue-500',
-      bgLight: 'bg-blue-50'
-    },
-    {
-      title: 'Clientes Registrados',
-      value: stats.clientes,
-      icon: '👥',
-      color: 'bg-green-500',
-      bgLight: 'bg-green-50'
-    },
-    {
-      title: 'Ventas Realizadas',
-      value: stats.ventas,
-      icon: '💰',
-      color: 'bg-purple-500',
-      bgLight: 'bg-purple-50'
-    },
-    {
-      title: 'Valor del Inventario',
-      value: formatCurrency(stats.inventarioValor),
-      icon: '💵',
-      color: 'bg-orange-500',
-      bgLight: 'bg-orange-50'
-    }
-  ];
+  if (error) {
+    return <div className="error">Error: {error}</div>;
+  }
 
   return (
-    <div>
-      {/* Bienvenida */}
-      <div className="bg-white rounded-xl shadow-md p-6 mb-8">
-        <h1 className="text-3xl font-bold text-gray-800">
-          ¡Bienvenido, {usuario.nombre}! 👋
-        </h1>
-        <p className="text-gray-600 mt-2">
-          Panel de control de RatonaMotors - Sistema de gestión de concesionario
-        </p>
-      </div>
-
-      {/* Tarjetas de estadísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {cards.map((card, index) => (
-          <div
-            key={index}
-            className="bg-white rounded-xl shadow-md p-6 hover:shadow-xl transition-shadow"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-500 text-sm font-medium mb-1">
-                  {card.title}
-                </p>
-                <p className="text-2xl font-bold text-gray-800">
-                  {card.value}
-                </p>
+    <div className="home-container">
+      {/* Header: Page Heading + Search Bar */}
+      <header className="home-header">
+        <div className="home-welcome">
+          <h1 className="home-title">Bienvenido, {usuario.nombre} {usuario.apellido}</h1>
+          <p className="home-subtitle">Aquí tienes un resumen de la actividad de hoy.</p>
+        </div>
+        <div className="home-search-wrapper">
+          <label className="home-search">
+            <div className="home-search-container">
+              <div className="home-search-icon">
+                <span className="material-symbols-outlined">search</span>
               </div>
-              <div className={`${card.bgLight} p-4 rounded-full`}>
-                <span className="text-3xl">{card.icon}</span>
-              </div>
+              <input
+                className="home-search-input"
+                placeholder="Buscar vehículos o clientes..."
+              />
             </div>
+          </label>
+        </div>
+      </header>
+
+      {/* Stats */}
+      <section className="home-stats">
+        {stats.map((stat, index) => (
+          <div key={index} className="stat-card">
+            <p className="stat-label">{stat.title}</p>
+            <p className="stat-value">{stat.value}</p>
+            <p className={`stat-change ${stat.positive ? 'positive' : 'negative'}`}>
+              {stat.change}
+            </p>
           </div>
         ))}
-      </div>
+      </section>
 
-      {/* Acciones rápidas */}
-      <div className="bg-white rounded-xl shadow-md p-6">
-        <h2 className="text-xl font-bold text-gray-800 mb-4">Acciones Rápidas</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <button className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-4 px-6 rounded-lg transition-colors flex items-center justify-center space-x-2">
-            <span>🚗</span>
-            <span>Ver Inventario</span>
-          </button>
-          <button className="bg-green-500 hover:bg-green-600 text-white font-semibold py-4 px-6 rounded-lg transition-colors flex items-center justify-center space-x-2">
-            <span>➕</span>
-            <span>Agregar Vehículo</span>
-          </button>
-          <button className="bg-purple-500 hover:bg-purple-600 text-white font-semibold py-4 px-6 rounded-lg transition-colors flex items-center justify-center space-x-2">
-            <span>💼</span>
-            <span>Registrar Venta</span>
-          </button>
+      {/* Button Group */}
+      <section className="home-buttons">
+        <button className="btn-primary">
+          <span className="material-symbols-outlined">add</span>
+          <span>Agregar Vehículo Nuevo</span>
+        </button>
+        <button className="btn-secondary">
+          <span className="material-symbols-outlined">person_add</span>
+          <span>Registrar Nuevo Cliente</span>
+        </button>
+        <button className="btn-secondary">
+          <span className="material-symbols-outlined">bar_chart</span>
+          <span>Gráfico Estadísticas</span>
+        </button>
+      </section>
+
+      {/* Recent Activity Table */}
+      <section className="home-activity">
+        <h2 className="activity-title">Actividad Reciente</h2>
+        <div className="table-wrapper">
+          <table className="activity-table">
+            <thead>
+              <tr>
+                <th>TIPO</th>
+                <th>DESCRIPCIÓN</th>
+                <th>FECHA</th>
+                <th>ESTADO</th>
+              </tr>
+            </thead>
+            <tbody>
+              {activities.map((activity, index) => (
+                <tr key={index}>
+                  <td>{activity.tipo}</td>
+                  <td>{activity.descripcion}</td>
+                  <td className="date-cell">{activity.fecha}</td>
+                  <td>
+                    <span className={`badge badge-${activity.estadoColor}`}>
+                      {activity.estado}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-      </div>
+      </section>
     </div>
   );
 }

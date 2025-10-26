@@ -278,5 +278,113 @@ def login():
     finally:
         close_db_connection(connection)
 
+
+# ========== ENDPOINTS DEL DASHBOARD ==========
+
+@app.route('/api/dashboard/stats', methods=['GET'])
+def get_dashboard_stats():
+    """Obtiene las estadísticas del dashboard"""
+    connection = get_db_connection()
+    if not connection:
+        return jsonify({"error": "Error de conexión a la base de datos"}), 500
+    
+    try:
+        cursor = connection.cursor(dictionary=True)
+        
+        # Contar vehículos en inventario
+        cursor.execute("SELECT COUNT(*) as total FROM vehiculos WHERE disponible = TRUE")
+        vehiculos_count = cursor.fetchone()['total']
+        
+        # Contar clientes activos
+        cursor.execute("SELECT COUNT(*) as total FROM clientes")
+        clientes_count = cursor.fetchone()['total']
+        
+        # Contar ventas del mes actual
+        cursor.execute("""
+            SELECT COUNT(*) as total 
+            FROM ventas 
+            WHERE MONTH(fecha_venta) = MONTH(CURRENT_DATE()) 
+            AND YEAR(fecha_venta) = YEAR(CURRENT_DATE())
+        """)
+        ventas_mes = cursor.fetchone()['total']
+        
+        # Contar nuevos clientes de la semana
+        cursor.execute("""
+            SELECT COUNT(*) as total 
+            FROM clientes 
+            WHERE fecha_registro >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
+        """)
+        prospectos = cursor.fetchone()['total']
+        
+        cursor.close()
+        
+        stats = [
+            {
+                "title": "Vehículos en Inventario",
+                "value": str(vehiculos_count),
+                "change": "+2% desde ayer",
+                "positive": True
+            },
+            {
+                "title": "Clientes Activos",
+                "value": str(clientes_count),
+                "change": "+5% este mes",
+                "positive": True
+            },
+            {
+                "title": "Ventas este Mes",
+                "value": str(ventas_mes),
+                "change": "+1.5% vs mes anterior",
+                "positive": True
+            },
+            {
+                "title": "Nuevos Prospectos",
+                "value": str(prospectos),
+                "change": "-3% esta semana",
+                "positive": False
+            }
+        ]
+        
+        return jsonify(stats), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        close_db_connection(connection)
+
+
+@app.route('/api/dashboard/activities', methods=['GET'])
+def get_dashboard_activities():
+    """Obtiene la actividad reciente del dashboard"""
+    connection = get_db_connection()
+    if not connection:
+        return jsonify({"error": "Error de conexión a la base de datos"}), 500
+    
+    try:
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT 
+                'Venta' as tipo,
+                CONCAT('Venta completada: ', veh.marca, ' ', veh.modelo, ' ', veh.año, ' a ', c.nombre, ' ', c.apellido) as descripcion,
+                CASE 
+                    WHEN TIMESTAMPDIFF(HOUR, v.fecha_venta, NOW()) < 24 THEN CONCAT('Hace ', TIMESTAMPDIFF(HOUR, v.fecha_venta, NOW()), ' horas')
+                    ELSE CONCAT('Hace ', TIMESTAMPDIFF(DAY, v.fecha_venta, NOW()), ' días')
+                END as fecha,
+                'Completado' as estado,
+                'green' as estadoColor
+            FROM ventas v
+            JOIN vehiculos veh ON v.id_vehiculo = veh.id_vehiculo
+            JOIN clientes c ON v.id_cliente = c.id_cliente
+            ORDER BY v.fecha_venta DESC
+            LIMIT 5
+        """)
+        activities = cursor.fetchall()
+        cursor.close()
+        
+        return jsonify(activities), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        close_db_connection(connection)
+
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

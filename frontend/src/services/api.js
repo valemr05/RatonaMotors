@@ -85,3 +85,25 @@ export const login = async (email, password) => {
     throw error;
   }
 };
+
+// ========== FUNCIONES DEL DASHBOARD ==========
+
+export const getDashboardStats = async () => {
+  const response = await fetch(`${API_URL}/dashboard/stats`);
+  
+  if (!response.ok) {
+    throw new Error('Error al obtener estadísticas');
+  }
+  
+  return response.json();
+};
+
+export const getDashboardActivities = async () => {
+  const response = await fetch(`${API_URL}/dashboard/activities`);
+  
+  if (!response.ok) {
+    throw new Error('Error al obtener actividades');
+  }
+  
+  return response.json();
+};
