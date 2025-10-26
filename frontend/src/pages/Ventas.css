@@ -1,0 +1,466 @@
+/* Container */
+.ventas-container {
+  width: 100%;
+  max-width: 87.5rem;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* Page Header */
+.ventas-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.ventas-title {
+  color: white;
+  font-size: 2.25rem;
+  font-weight: 900;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+  margin: 0;
+}
+
+.btn-add-sale {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-width: 84px;
+  cursor: pointer;
+  overflow: hidden;
+  border-radius: 0.5rem;
+  height: 2.75rem;
+  padding: 0 1.25rem;
+  background-color: #7f13ec;
+  color: white;
+  font-size: 0.875rem;
+  font-weight: bold;
+  line-height: normal;
+  letter-spacing: 0.015em;
+  border: none;
+  transition: background-color 0.2s;
+}
+
+.btn-add-sale:hover {
+  background-color: rgba(127, 19, 236, 0.9);
+}
+
+/* Stats */
+.ventas-stats {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+@media (min-width: 768px) {
+  .ventas-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .ventas-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.stat-label {
+  color: #d1d5db;
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: normal;
+  margin: 0;
+}
+
+.stat-value {
+  color: white;
+  font-size: 1.875rem;
+  font-weight: bold;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.stat-change {
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: normal;
+  margin: 0;
+}
+
+.stat-change.positive {
+  color: #4ade80;
+}
+
+.stat-change.negative {
+  color: #f87171;
+}
+
+/* Toolbar */
+.ventas-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .ventas-toolbar {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+}
+
+.search-container {
+  flex: 1;
+}
+
+.search-bar {
+  display: flex;
+  flex-direction: column;
+  min-width: 10rem;
+  height: 3rem;
+  width: 100%;
+  max-width: 28rem;
+}
+
+.search-wrapper {
+  display: flex;
+  width: 100%;
+  flex: 1;
+  align-items: stretch;
+  border-radius: 0.5rem;
+  height: 100%;
+}
+
+.search-icon-wrapper {
+  color: rgba(156, 163, 175, 1);
+  display: flex;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-right: 0;
+  align-items: center;
+  justify-content: center;
+  padding-left: 1rem;
+  border-radius: 0.5rem 0 0 0.5rem;
+}
+
+.search-input {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  flex: 1;
+  resize: none;
+  overflow: hidden;
+  border-radius: 0 0.5rem 0.5rem 0;
+  color: white;
+  outline: none;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-left: 0;
+  background-color: rgba(255, 255, 255, 0.05);
+  height: 100%;
+  padding: 0 1rem;
+  font-size: 1rem;
+  font-weight: normal;
+  line-height: normal;
+}
+
+.search-input::placeholder {
+  color: rgba(156, 163, 175, 1);
+}
+
+.search-input:focus {
+  outline: none;
+  ring: 2px solid rgba(127, 19, 236, 0.5);
+  border-color: rgba(127, 19, 236, 0.5);
+}
+
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.toolbar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.toolbar-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Table */
+.table-container {
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.ventas-table {
+  width: 100%;
+  font-size: 0.875rem;
+  text-align: left;
+}
+
+.ventas-table thead {
+  font-size: 0.75rem;
+  color: #d1d5db;
+  text-transform: uppercase;
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.ventas-table th {
+  padding: 1rem 1.5rem;
+  font-weight: bold;
+}
+
+.ventas-table tbody tr {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  transition: background-color 0.2s;
+}
+
+.ventas-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.ventas-table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.ventas-table td {
+  padding: 1rem 1.5rem;
+  color: white;
+}
+
+.ventas-table td.text-gray {
+  color: #d1d5db;
+}
+
+.ventas-table td.font-medium {
+  font-weight: 500;
+}
+
+.ventas-table td.font-semibold {
+  font-weight: 600;
+}
+
+.ventas-table td.text-right {
+  text-align: right;
+}
+
+.ventas-table td.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.text-center {
+  text-align: center;
+}
+
+/* Status Badges */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.status-completed {
+  background-color: rgba(34, 197, 94, 0.2);
+  color: #86efac;
+}
+
+.status-pending {
+  background-color: rgba(234, 179, 8, 0.2);
+  color: #fde047;
+}
+
+.status-overdue {
+  background-color: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.action-btn {
+  padding: 0.5rem;
+  color: #d1d5db;
+  background: none;
+  border: none;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.action-btn:hover {
+  color: white;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Pagination */
+.pagination-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 1rem;
+}
+
+@media (min-width: 768px) {
+  .pagination-nav {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+.pagination-info {
+  font-size: 0.875rem;
+  font-weight: normal;
+  color: rgba(156, 163, 175, 1);
+}
+
+.pagination-info .font-semibold {
+  font-weight: 600;
+  color: white;
+}
+
+.pagination-list {
+  display: inline-flex;
+  align-items: stretch;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pagination-list li {
+  margin-left: -1px;
+}
+
+.pagination-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.05);
+  color: rgba(156, 163, 175, 1);
+  text-decoration: none;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  transition: all 0.2s;
+}
+
+.pagination-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.pagination-btn.active {
+  background-color: #7f13ec;
+  color: white;
+}
+
+.pagination-prev {
+  border-radius: 0.5rem 0 0 0.5rem;
+}
+
+.pagination-next {
+  border-radius: 0 0.5rem 0.5rem 0;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Empty State */
+.empty-state {
+  padding: 3rem 1rem;
+  text-align: center;
+  color: #d1d5db;
+}
+
+/* Loading & Error */
+.loading,
+.error {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 50vh;
+  color: white;
+  font-size: 1.25rem;
+}
+
+.error {
+  color: #f87171;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .ventas-container {
+    padding: 1rem;
+  }
+
+  .ventas-title {
+    font-size: 1.875rem;
+  }
+
+  .ventas-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .btn-add-sale {
+    width: 100%;
+    justify-content: center
+  }
+}
