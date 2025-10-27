@@ -14,7 +14,7 @@ def home():
 
 @app.route('/api/vehiculos', methods=['GET'])
 def get_vehiculos():
-    """Obtiene todos los vehículos"""
+    """Obtiene todos los vehículos con su imagen principal"""
     connection = get_db_connection()
     if not connection:
         return jsonify({"error": "Error de conexión a la base de datos"}), 500
@@ -22,12 +22,24 @@ def get_vehiculos():
     try:
         cursor = connection.cursor(dictionary=True)
         cursor.execute("""
-            SELECT v.*, c.num_puertas, c.tipo_combustible, c.motor, 
-                   c.transmision, c.aire_acondicionado, c.direccion, 
-                   c.control_traccion, c.version
+            SELECT 
+                v.*, 
+                c.num_puertas, 
+                c.tipo_combustible, 
+                c.motor, 
+                c.transmision, 
+                c.aire_acondicionado, 
+                c.direccion, 
+                c.control_traccion, 
+                c.version,
+                COALESCE(img.url_imagen, v.imagen_url) as imagen_principal
             FROM vehiculos v
             LEFT JOIN caracteristicas_vehiculo c ON v.id_vehiculo = c.id_vehiculo
+            LEFT JOIN imagenes_vehiculo img 
+                ON v.id_vehiculo = img.id_vehiculo 
+                AND img.es_principal = TRUE
             WHERE v.disponible = TRUE
+            ORDER BY v.fecha_registro DESC
         """)
         vehiculos = cursor.fetchall()
         cursor.close()
@@ -125,6 +137,83 @@ def crear_vehiculo():
         return jsonify({"error": str(e)}), 500
     finally:
         close_db_connection(connection)
+
+# ========== ENDPOINTS DE IMÁGENES DE VEHÍCULOS ==========
+
+@app.route('/api/vehiculos/<int:id>/imagenes', methods=['GET'])
+def get_imagenes_vehiculo(id):
+    """Obtiene todas las imágenes de un vehículo"""
+    connection = get_db_connection()
+    if not connection:
+        return jsonify({"error": "Error de conexión a la base de datos"}), 500
+    
+    try:
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT * FROM imagenes_vehiculo 
+            WHERE id_vehiculo = %s 
+            ORDER BY es_principal DESC, orden ASC
+        """, (id,))
+        imagenes = cursor.fetchall()
+        cursor.close()
+        return jsonify(imagenes), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        close_db_connection(connection)
+
+
+@app.route('/api/vehiculos/<int:id>/imagenes', methods=['POST'])
+def agregar_imagen_vehiculo(id):
+    """Agrega una nueva imagen a un vehículo"""
+    data = request.json
+    connection = get_db_connection()
+    if not connection:
+        return jsonify({"error": "Error de conexión a la base de datos"}), 500
+    
+    try:
+        cursor = connection.cursor()
+        sql = """
+            INSERT INTO imagenes_vehiculo (id_vehiculo, url_imagen, orden, es_principal)
+            VALUES (%s, %s, %s, %s)
+        """
+        valores = (
+            id,
+            data.get('url_imagen'),
+            data.get('orden', 0),
+            data.get('es_principal', False)
+        )
+        cursor.execute(sql, valores)
+        connection.commit()
+        id_imagen = cursor.lastrowid
+        cursor.close()
+        return jsonify({"mensaje": "Imagen agregada exitosamente", "id": id_imagen}), 201
+    except Exception as e:
+        connection.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        close_db_connection(connection)
+
+
+@app.route('/api/imagenes/<int:id>', methods=['DELETE'])
+def eliminar_imagen(id):
+    """Elimina una imagen"""
+    connection = get_db_connection()
+    if not connection:
+        return jsonify({"error": "Error de conexión a la base de datos"}), 500
+    
+    try:
+        cursor = connection.cursor()
+        cursor.execute("DELETE FROM imagenes_vehiculo WHERE id_imagen = %s", (id,))
+        connection.commit()
+        cursor.close()
+        return jsonify({"mensaje": "Imagen eliminada exitosamente"}), 200
+    except Exception as e:
+        connection.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        close_db_connection(connection)
+
 
 # ========== ENDPOINTS DE CLIENTES ==========
 

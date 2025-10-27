@@ -147,10 +147,18 @@ function Vehiculos({ usuario }) {
               <div key={vehiculo.id_vehiculo} className="vehiculo-card">
                 <div className="vehiculo-image-container">
                   <img
-                    src={vehiculo.imagen_url || 'https://via.placeholder.com/400x300'}
+                    src={
+                      vehiculo.imagen_principal 
+                        ? `http://localhost:5000${vehiculo.imagen_principal}`
+                        : 'https://via.placeholder.com/400x300?text=Sin+Imagen'
+                    }
                     alt={`${vehiculo.marca} ${vehiculo.modelo}`}
                     className="vehiculo-image"
+                    onError={(e) => {
+                      e.target.src = 'https://via.placeholder.com/400x300?text=Sin+Imagen';
+                    }}
                   />
+
                   <div className="vehiculo-year-badge">{vehiculo.año}</div>
                 </div>
                 <div className="vehiculo-content">

@@ -1,32 +1,53 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getVehiculo } from '../services/api';
+import { getVehiculo, getImagenesVehiculo } from '../services/api';
 import './VehiculoDetalle.css';
 
 function VehiculoDetalle() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [vehiculo, setVehiculo] = useState(null);
+  const [imagenes, setImagenes] = useState([]); // ✅ Variable declarada
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [imagenActiva, setImagenActiva] = useState(0);
   const [tabActiva, setTabActiva] = useState('descripcion');
 
-  // Imágenes de ejemplo (puedes agregar múltiples imágenes desde la BD)
-  const imagenes = vehiculo ? [
-    vehiculo.imagen_url,
-    vehiculo.imagen_url, // Repite por ahora, luego puedes tener múltiples URLs
-    vehiculo.imagen_url,
-    vehiculo.imagen_url,
-    vehiculo.imagen_url
-  ] : [];
-
   useEffect(() => {
-    const fetchVehiculo = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const data = await getVehiculo(id);
-        setVehiculo(data);
+        
+        // Cargar vehículo
+        const vehiculoData = await getVehiculo(id);
+        setVehiculo(vehiculoData);
+        
+        // Cargar imágenes
+        try {
+          const imagenesData = await getImagenesVehiculo(id);
+          
+          if (imagenesData && imagenesData.length > 0) {
+            // Convertir rutas relativas a URLs completas
+            const imagenesCompletas = imagenesData.map(img => 
+              `http://localhost:5000${img.url_imagen}`
+            );
+            setImagenes(imagenesCompletas);
+          } else if (vehiculoData.imagen_url) {
+            // Si no hay imágenes en la tabla, usar imagen_url del vehículo
+            setImagenes([`http://localhost:5000${vehiculoData.imagen_url}`]);
+          } else {
+            // Si no hay ninguna imagen
+            setImagenes(['https://via.placeholder.com/800x600?text=Sin+Imagen']);
+          }
+        } catch (imgError) {
+          console.log('No se encontraron imágenes adicionales, usando imagen principal');
+          if (vehiculoData.imagen_url) {
+            setImagenes([`http://localhost:5000${vehiculoData.imagen_url}`]);
+          } else {
+            setImagenes(['https://via.placeholder.com/800x600?text=Sin+Imagen']);
+          }
+        }
+        
         setError(null);
       } catch (err) {
         setError(err.message);
@@ -37,7 +58,7 @@ function VehiculoDetalle() {
     };
 
     if (id) {
-      fetchVehiculo();
+      fetchData();
     }
   }, [id]);
 
@@ -57,9 +78,13 @@ function VehiculoDetalle() {
     <div className="detalle-container">
       {/* Breadcrumbs */}
       <div className="breadcrumbs">
-        <a href="#" onClick={() => navigate('/vehiculos')}>Inicio</a>
+        <a href="#" onClick={(e) => { e.preventDefault(); navigate('/vehiculos'); }}>
+          Inicio
+        </a>
         <span className="breadcrumb-separator">/</span>
-        <a href="#" onClick={() => navigate('/vehiculos')}>Vehículos</a>
+        <a href="#" onClick={(e) => { e.preventDefault(); navigate('/vehiculos'); }}>
+          Vehículos
+        </a>
         <span className="breadcrumb-separator">/</span>
         <span className="breadcrumb-active">
           {vehiculo.año} {vehiculo.marca} {vehiculo.modelo}
@@ -71,20 +96,28 @@ function VehiculoDetalle() {
         <div className="detalle-galeria">
           <div 
             className="imagen-principal"
-            style={{ backgroundImage: `url(${imagenes[imagenActiva] || 'https://via.placeholder.com/800x600'})` }}
+            style={{ 
+              backgroundImage: `url(${imagenes[imagenActiva]})`,
+              backgroundColor: '#2a1f3d'
+            }}
           />
           
-          {/* Thumbnails */}
-          <div className="thumbnails-grid">
-            {imagenes.map((img, index) => (
-              <div
-                key={index}
-                className={`thumbnail ${imagenActiva === index ? 'active' : ''}`}
-                style={{ backgroundImage: `url(${img || 'https://via.placeholder.com/200x150'})` }}
-                onClick={() => setImagenActiva(index)}
-              />
-            ))}
-          </div>
+          {/* Thumbnails - Solo mostrar si hay más de una imagen */}
+          {imagenes.length > 1 && (
+            <div className="thumbnails-grid">
+              {imagenes.map((img, index) => (
+                <div
+                  key={index}
+                  className={`thumbnail ${imagenActiva === index ? 'active' : ''}`}
+                  style={{ 
+                    backgroundImage: `url(${img})`,
+                    backgroundColor: '#2a1f3d'
+                  }}
+                  onClick={() => setImagenActiva(index)}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Right Column: Vehicle Info */}

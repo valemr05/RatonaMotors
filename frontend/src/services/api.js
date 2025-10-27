@@ -33,6 +33,48 @@ export const crearVehiculo = async (vehiculoData) => {
   }
 };
 
+
+// ========== FUNCIONES DE IMÁGENES DE VEHÍCULOS ==========
+
+export const getImagenesVehiculo = async (id) => {
+  const response = await fetch(`${API_URL}/vehiculos/${id}/imagenes`);
+  
+  if (!response.ok) {
+    throw new Error('Error al obtener imágenes');
+  }
+  
+  return response.json();
+};
+
+export const agregarImagenVehiculo = async (id, imagenData) => {
+  const response = await fetch(`${API_URL}/vehiculos/${id}/imagenes`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(imagenData),
+  });
+
+  if (!response.ok) {
+    throw new Error('Error al agregar imagen');
+  }
+
+  return response.json();
+};
+
+export const eliminarImagen = async (id) => {
+  const response = await fetch(`${API_URL}/imagenes/${id}`, {
+    method: 'DELETE',
+  });
+
+  if (!response.ok) {
+    throw new Error('Error al eliminar imagen');
+  }
+
+  return response.json();
+};
+
+
 // ========== CLIENTES ==========
 export const getClientes = async () => {
   try {
