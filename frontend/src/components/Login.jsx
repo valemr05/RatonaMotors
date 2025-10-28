@@ -109,12 +109,7 @@ function Login({ onLogin }) {
 
           </form>
 
-          {/* Credenciales */}
-          <div className="credentials-box">
-            <p className="credentials-title">Credenciales de prueba:</p>
-            <p className="credentials-text">Admin: admin@ratonamotors.com / admin123</p>
-            <p className="credentials-text">Empleado: maria@ratonamotors.com / empleado123</p>
-          </div>
+
         </div>
 
         

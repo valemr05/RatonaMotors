@@ -9,28 +9,8 @@ function Ventas({ usuario }) {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
+  const [stats, setStats] = useState([]);
   
-  // Stats de ejemplo (luego conectar con API)
-  const stats = [
-    {
-      label: 'Total Sales (This Month)',
-      value: '$1,250,000',
-      change: '+5.2%',
-      positive: true
-    },
-    {
-      label: 'Vehicles Sold',
-      value: '25',
-      change: '+2.1%',
-      positive: true
-    },
-    {
-      label: 'Average Sale Value',
-      value: '$50,000',
-      change: '-1.5%',
-      positive: false
-    }
-  ];
 
   useEffect(() => {
     loadVentas();
@@ -40,7 +20,8 @@ function Ventas({ usuario }) {
     try {
       setLoading(true);
       const data = await getVentas();
-      setVentas(data);
+      setVentas(data.ventas);
+      setStats(data.stats);
       setError(null);
     } catch (err) {
       setError(err.message);
@@ -80,7 +61,7 @@ function Ventas({ usuario }) {
         <button className="btn-add-sale" 
                 onClick={() => setShowModal(true)}>
           <span className="material-symbols-outlined">add_circle</span>
-          <span>Add New Sale</span>
+          <span>Agregar nueva venta</span>
         </button>
       </header>
 
@@ -88,7 +69,7 @@ function Ventas({ usuario }) {
       <section className="ventas-stats">
         {stats.map((stat, index) => (
           <div key={index} className="stat-card">
-            <p className="stat-label">{stat.label}</p>
+            <p className="stat-label">{stat.title}</p>
             <p className="stat-value">{stat.value}</p>
             <p className={`stat-change ${stat.positive ? 'positive' : 'negative'}`}>
               {stat.change}
@@ -97,50 +78,19 @@ function Ventas({ usuario }) {
         ))}
       </section>
 
-      {/* Toolbar & Search */}
-      <section className="ventas-toolbar">
-        <div className="search-container">
-          <label className="search-bar">
-            <div className="search-wrapper">
-              <div className="search-icon-wrapper">
-                <span className="material-symbols-outlined">search</span>
-              </div>
-              <input
-                type="text"
-                className="search-input"
-                placeholder="Search by Sale ID, Client, or Vehicle..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-          </label>
-        </div>
-        <div className="toolbar-actions">
-          <button className="toolbar-btn" aria-label="Filter">
-            <span className="material-symbols-outlined">filter_list</span>
-          </button>
-          <button className="toolbar-btn" aria-label="Sort">
-            <span className="material-symbols-outlined">swap_vert</span>
-          </button>
-          <button className="toolbar-btn" aria-label="Export">
-            <span className="material-symbols-outlined">download</span>
-          </button>
-        </div>
-      </section>
-
       {/* Data Table */}
       <div className="table-container">
         <div className="table-wrapper">
           <table className="ventas-table">
             <thead>
               <tr>
-                <th>Sale ID</th>
-                <th>Date</th>
-                <th>Vehicle</th>
-                <th>Client</th>
-                <th className="text-right">Sale Amount</th>
-                <th className="text-center">Status</th>
-                <th className="text-center">Actions</th>
+                <th>Venta ID</th>
+                <th>Fecha</th>
+                <th>Vehículo</th>
+                <th>Cliente</th>
+                <th className="text-right">Monto de Venta</th>
+                <th className="text-center">Estado</th>
+               
               </tr>
             </thead>
             <tbody>
@@ -165,16 +115,7 @@ function Ventas({ usuario }) {
                     <td className="text-center">
                       {getStatusBadge(venta.estado || 'Completado')}
                     </td>
-                    <td className="text-center">
-                      <div className="action-buttons">
-                        <button className="action-btn" aria-label="Ver Detalles">
-                          <span className="material-symbols-outlined">visibility</span>
-                        </button>
-                        <button className="action-btn" aria-label="Generar Factura">
-                          <span className="material-symbols-outlined">receipt</span>
-                        </button>
-                      </div>
-                    </td>
+                 
                   </tr>
                 ))
               )}

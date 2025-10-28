@@ -49,3 +49,48 @@
 .btn-back:hover {
   background-color: #6a0fd1;
 }
+
+.btn-action.confirmar {
+  background-color: rgba(59, 130, 246, 0.2);
+  color: #3b82f6;
+}
+
+.btn-action.confirmar:hover:not(:disabled) {
+  background-color: rgba(59, 130, 246, 0.3);
+}
+
+.btn-action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.estado-final {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.875rem;
+  font-style: italic;
+  margin: 0;
+  text-transform: capitalize;
+}
+
+.select-empleado {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.5rem;
+  color: white;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.select-empleado:focus {
+  outline: none;
+  border-color: #7f13ec;
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.select-empleado option {
+  background-color: #1a1625;
+  color: white;
+}

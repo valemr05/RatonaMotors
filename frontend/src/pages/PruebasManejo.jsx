@@ -235,13 +235,30 @@ function PruebasManejo({ usuario }) {
                   </div>
                 )}
 
-                {/* Empleado asignado */}
+                {/* Empleado asignado y selector */}
                 <div className="prueba-seccion">
                   <h4 className="seccion-titulo">
                     <span className="material-symbols-outlined">badge</span>
                     Empleado Asignado
                   </h4>
-                  {prueba.empleado_asignado ? (
+                  {prueba.estado === 'pendiente' ? (
+                    <select
+                      className="select-empleado"
+                      value={prueba.id_empleado_asignado || ''}
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          handleAsignarEmpleado(prueba.id_prueba, parseInt(e.target.value));
+                        }
+                      }}
+                    >
+                      <option value="">Seleccionar empleado...</option>
+                      {empleados.map(emp => (
+                        <option key={emp.id_usuario} value={emp.id_usuario}>
+                          {emp.nombre} {emp.apellido}
+                        </option>
+                      ))}
+                    </select>
+                  ) : prueba.empleado_asignado ? (
                     <p className="empleado-asignado-nombre">
                       {prueba.empleado_asignado}
                     </p>
@@ -253,30 +270,33 @@ function PruebasManejo({ usuario }) {
 
               {/* Acciones */}
               <div className="prueba-card-actions">
-                {/* Asignar empleado */}
-                {prueba.estado === 'pendiente' && (
-                  <div className="action-group">
-                    <select
-                      className="select-empleado"
-                      onChange={(e) => {
-                        if (e.target.value) {
-                          handleAsignarEmpleado(prueba.id_prueba, e.target.value);
-                        }
-                      }}
-                      defaultValue=""
-                    >
-                      <option value="">Asignar empleado...</option>
-                      {empleados.map(emp => (
-                        <option key={emp.id_usuario} value={emp.id_usuario}>
-                          {emp.nombre} {emp.apellido}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-
-                {/* Botones de estado */}
                 <div className="action-buttons">
+                  {prueba.estado === 'pendiente' && (
+                    <>
+                      <button
+                        className="btn-action confirmar"
+                        onClick={() => {
+                          if (!prueba.id_empleado_asignado) {
+                            alert('⚠️ Debes asignar un empleado primero');
+                            return;
+                          }
+                          handleCambiarEstado(prueba.id_prueba, 'confirmada', prueba.id_empleado_asignado);
+                        }}
+                        disabled={!prueba.id_empleado_asignado}
+                      >
+                        <span className="material-symbols-outlined">check_circle</span>
+                        Confirmar
+                      </button>
+                      <button
+                        className="btn-action cancelar"
+                        onClick={() => handleCambiarEstado(prueba.id_prueba, 'cancelada')}
+                      >
+                        <span className="material-symbols-outlined">close</span>
+                        Cancelar
+                      </button>
+                    </>
+                  )}
+
                   {prueba.estado === 'confirmada' && (
                     <>
                       <button
@@ -296,14 +316,10 @@ function PruebasManejo({ usuario }) {
                     </>
                   )}
 
-                  {prueba.estado === 'pendiente' && (
-                    <button
-                      className="btn-action cancelar"
-                      onClick={() => handleCambiarEstado(prueba.id_prueba, 'cancelada')}
-                    >
-                      <span className="material-symbols-outlined">close</span>
-                      Cancelar
-                    </button>
+                  {(prueba.estado === 'completada' || prueba.estado === 'cancelada') && (
+                    <p className="estado-final">
+                      Prueba {prueba.estado}
+                    </p>
                   )}
                 </div>
               </div>

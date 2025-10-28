@@ -51,13 +51,8 @@ function Home({ usuario }) {
         <div className="home-search-wrapper">
           <label className="home-search">
             <div className="home-search-container">
-              <div className="home-search-icon">
-                <span className="material-symbols-outlined">search</span>
-              </div>
-              <input
-                className="home-search-input"
-                placeholder="Buscar vehículos o clientes..."
-              />
+              
+            
             </div>
           </label>
         </div>
@@ -76,14 +71,6 @@ function Home({ usuario }) {
         ))}
       </section>
 
-      {/* Button Group */}
-      <section className="home-buttons">
-        
-        <button className="btn-secondary">
-          <span className="material-symbols-outlined">bar_chart</span>
-          <span>Gráfico Estadísticas</span>
-        </button>
-      </section>
 
       {/* Recent Activity Table */}
       <section className="home-activity">

@@ -81,7 +81,7 @@ function Clientes() {
       <div className="page-header">
         <div className="header-content">
           <h1 className="page-title">Gestión de Clientes</h1>
-          <p className="page-subtitle">Administra y visualiza la información de tus clientes.</p>
+          
         </div>
         <button className="btn-primary" onClick={() => setShowModal(true)}>
           <span className="icon">+</span>

@@ -455,8 +455,49 @@ def get_ventas():
             ORDER BY v.fecha_venta DESC
         """)
         ventas = cursor.fetchall()
+
+        # Contar vehículos en inventario
+        cursor.execute("SELECT COUNT(*) as total FROM vehiculos WHERE disponible = '1'")
+        vehiculos_count = cursor.fetchone()['total']
+
+        # Contar clientes activos
+        cursor.execute("SELECT COUNT(*) as total FROM vehiculos WHERE disponible = '0'")
+        vehiculos_vendidos = cursor.fetchone()['total']
+        
+        cursor.execute("""
+            SELECT ROUND(COALESCE(AVG(precio_venta), 0), 2) AS total
+            FROM ventas
+            WHERE MONTH(fecha_venta) = MONTH(CURRENT_DATE())
+            AND YEAR(fecha_venta) = YEAR(CURRENT_DATE())
+        """)
+        ventas_mes = cursor.fetchone()['total']
+
         cursor.close()
-        return jsonify(ventas), 200
+
+        stats = [
+            {
+                "title": "Vehiculos disponibles",
+                "value": str(vehiculos_count),
+                "positive": True
+            },
+            {
+                "title": "Vehículos vendidos",
+                "value": str(vehiculos_vendidos),
+                "positive": True
+            },
+            {
+                "title": "Promedio ventas",
+                "value": str(ventas_mes),
+                "positive": True
+            },
+         
+        ]
+        
+        return jsonify({
+            "ventas": ventas,
+            "stats": stats
+        }), 200
+    
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     finally:
@@ -561,41 +602,26 @@ def get_dashboard_stats():
         """)
         ventas_mes = cursor.fetchone()['total']
         
-        # Contar nuevos clientes de la semana
-        cursor.execute("""
-            SELECT COUNT(*) as total 
-            FROM clientes 
-            WHERE fecha_registro >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
-        """)
-        prospectos = cursor.fetchone()['total']
-        
+      
         cursor.close()
         
         stats = [
             {
                 "title": "Vehículos en Inventario",
                 "value": str(vehiculos_count),
-                "change": "+2% desde ayer",
                 "positive": True
             },
             {
                 "title": "Clientes Activos",
                 "value": str(clientes_count),
-                "change": "+5% este mes",
                 "positive": True
             },
             {
                 "title": "Ventas este Mes",
                 "value": str(ventas_mes),
-                "change": "+1.5% vs mes anterior",
                 "positive": True
             },
-            {
-                "title": "Nuevos Prospectos",
-                "value": str(prospectos),
-                "change": "-3% esta semana",
-                "positive": False
-            }
+         
         ]
         
         return jsonify(stats), 200
@@ -837,7 +863,7 @@ def crear_prueba_manejo():
         close_db_connection(connection)
 
 
-@app.route('/api/pruebas-manejo/<int:id>/estado', methods=['PATCH'])
+@app.route('/api/pruebas-manejo/<int:id>', methods=['PATCH'])
 def actualizar_estado_prueba(id):
     """Actualiza el estado de una prueba de manejo"""
     data = request.json

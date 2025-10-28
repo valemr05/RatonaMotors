@@ -159,7 +159,9 @@ function Vehiculos({ usuario }) {
                     <span>{vehiculo.tipo_combustible || 'Gasolina'}</span>
                   </div>
                   <div className="vehiculo-footer">
-                    <p className="vehiculo-price">${vehiculo.precio?.toLocaleString()}</p>
+                    <p className="vehiculo-price">
+                      ${Math.floor(vehiculo.precio)?.toLocaleString()}
+                    </p>
                   </div>
                   <button 
                     className="vehiculo-btn"
