@@ -25,29 +25,16 @@ function VehiculoDetalle() {
         setVehiculo(vehiculoData);
         
         // Cargar imágenes
-        try {
-          const imagenesData = await getImagenesVehiculo(id);
-          
-          if (imagenesData && imagenesData.length > 0) {
-            // Convertir rutas relativas a URLs completas
-            const imagenesCompletas = imagenesData.map(img => 
-              `http://localhost:5000${img.url_imagen}`
-            );
-            setImagenes(imagenesCompletas);
-          } else if (vehiculoData.imagen_url) {
-            // Si no hay imágenes en la tabla, usar imagen_url del vehículo
-            setImagenes([`http://localhost:5000${vehiculoData.imagen_url}`]);
-          } else {
-            // Si no hay ninguna imagen
-            setImagenes(['https://via.placeholder.com/800x600?text=Sin+Imagen']);
-          }
-        } catch (imgError) {
-          console.log('No se encontraron imágenes adicionales, usando imagen principal');
-          if (vehiculoData.imagen_url) {
-            setImagenes([`http://localhost:5000${vehiculoData.imagen_url}`]);
-          } else {
-            setImagenes(['https://via.placeholder.com/800x600?text=Sin+Imagen']);
-          }
+        // Las imágenes ya vienen en el objeto vehiculoData
+        if (vehiculoData.imagenes && vehiculoData.imagenes.length > 0) {
+          // Las URLs ya vienen completas desde el endpoint
+          setImagenes(vehiculoData.imagenes);
+        } else if (vehiculoData.imagen_principal) {
+          // Usar imagen principal si existe
+          setImagenes([vehiculoData.imagen_principal]);
+        } else {
+          // Placeholder si no hay imágenes
+          setImagenes(['https://via.placeholder.com/800x600?text=Sin+Imagen']);
         }
         
         setError(null);
@@ -96,13 +83,16 @@ function VehiculoDetalle() {
       <div className="detalle-grid">
         {/* Left Column: Image Gallery */}
         <div className="detalle-galeria">
-          <div 
-            className="imagen-principal"
-            style={{ 
-              backgroundImage: `url(${imagenes[imagenActiva]})`,
-              backgroundColor: '#2a1f3d'
-            }}
-          />
+          <div className="imagen-principal" >
+            <img
+              src={imagenes[imagenActiva]}
+              alt={`${vehiculo.marca} ${vehiculo.modelo}`}
+              onError={(e) => {
+                e.target.src = 'https://via.placeholder.com/800x600?text=Sin+Imagen';
+              }}
+            /> 
+
+          </div>
           
           {/* Thumbnails - Solo mostrar si hay más de una imagen */}
           {imagenes.length > 1 && (

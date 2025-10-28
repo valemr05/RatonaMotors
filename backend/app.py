@@ -45,37 +45,41 @@ def get_vehiculos():
         cursor = connection.cursor(dictionary=True)
         cursor.execute("""
             SELECT 
-                v.*, 
-                c.num_puertas, 
-                c.tipo_combustible, 
-                c.motor, 
-                c.transmision, 
-                c.aire_acondicionado, 
-                c.direccion, 
-                c.control_traccion, 
-                c.version,
-                    GROUP_CONCAT(
-                    CONCAT('http://localhost:5000/static/vehiculos/', iv.url_imagen)
-                    ORDER BY iv.es_principal DESC
-                    SEPARATOR ','
-                ) as imagenes
+                v.*,
+                c.num_puertas,
+                c.tipo_combustible,
+                c.motor,
+                c.transmision,
+                c.aire_acondicionado,
+                c.direccion,
+                c.control_traccion,
+                c.version
             FROM vehiculos v
             LEFT JOIN caracteristicas_vehiculo c ON v.id_vehiculo = c.id_vehiculo
-            LEFT JOIN imagenes_vehiculo iv ON v.id_vehiculo = iv.id_vehiculo
             WHERE v.disponible = TRUE
-            GROUP BY v.id_vehiculo
             ORDER BY v.fecha_registro DESC
         """)
         vehiculos = cursor.fetchall()
         
-        # Convertir string de imágenes a array
+       # Obtener imágenes para cada vehículo
         for vehiculo in vehiculos:
-            if vehiculo['imagenes']:
-                vehiculo['imagenes'] = vehiculo['imagenes'].split(',')
-                vehiculo['imagen_principal'] = vehiculo['imagenes'][0] if vehiculo['imagenes'] else None
-            else:
-                vehiculo['imagenes'] = []
-                vehiculo['imagen_principal'] = None
+            cursor.execute("""
+                SELECT url_imagen, es_principal
+                FROM imagenes_vehiculo
+                WHERE id_vehiculo = %s
+                ORDER BY es_principal DESC, id_imagen ASC
+            """, (vehiculo['id_vehiculo'],))
+            
+            imagenes_db = cursor.fetchall()
+            
+            # Construir URLs completas
+            vehiculo['imagenes'] = [
+                f"http://localhost:5000/static/vehiculos/{img['url_imagen']}"
+                for img in imagenes_db
+            ]
+            
+            # Imagen principal es la primera
+            vehiculo['imagen_principal'] = vehiculo['imagenes'][0] if vehiculo['imagenes'] else None
         
         cursor.close()
         return jsonify(vehiculos), 200
@@ -90,7 +94,67 @@ def get_vehiculos():
 
 @app.route('/api/vehiculos/<int:id>', methods=['GET'])
 def get_vehiculo(id):
-    """Obtiene un vehículo específico por ID"""
+    """Obtiene un vehículo específico con sus imágenes"""
+    connection = get_db_connection()
+    if not connection:
+        return jsonify({"error": "Error de conexión a la base de datos"}), 500
+    
+    try:
+        cursor = connection.cursor(dictionary=True)
+        
+        # Obtener vehículo con características
+        cursor.execute("""
+            SELECT 
+                v.*,
+                c.num_puertas,
+                c.tipo_combustible,
+                c.motor,
+                c.transmision,
+                c.aire_acondicionado,
+                c.direccion,
+                c.control_traccion,
+                c.version
+            FROM vehiculos v
+            LEFT JOIN caracteristicas_vehiculo c ON v.id_vehiculo = c.id_vehiculo
+            WHERE v.id_vehiculo = %s AND v.disponible = TRUE
+        """, (id,))
+        
+        vehiculo = cursor.fetchone()
+        
+        if not vehiculo:
+            return jsonify({"error": "Vehículo no encontrado"}), 404
+        
+        # Obtener imágenes del vehículo
+        cursor.execute("""
+            SELECT url_imagen, es_principal
+            FROM imagenes_vehiculo
+            WHERE id_vehiculo = %s
+            ORDER BY es_principal DESC, id_imagen ASC
+        """, (id,))
+        
+        imagenes_db = cursor.fetchall()
+        
+        # Construir URLs completas
+        vehiculo['imagenes'] = [
+            f"http://localhost:5000/static/vehiculos/{img['url_imagen']}"
+            for img in imagenes_db
+        ]
+        
+        # Imagen principal es la primera
+        vehiculo['imagen_principal'] = vehiculo['imagenes'][0] if vehiculo['imagenes'] else None
+        
+        cursor.close()
+        return jsonify(vehiculo), 200
+        
+    except Exception as e:
+        print(f"Error en get_vehiculo: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+    finally:
+        close_db_connection(connection)
+
+@app.route('/api/vehiculos/<int:id>/imagenes', methods=['GET'])
+def get_imagenes_vehiculo(id):
+    """Obtiene las imágenes de un vehículo con URLs completas"""
     connection = get_db_connection()
     if not connection:
         return jsonify({"error": "Error de conexión a la base de datos"}), 500
@@ -98,25 +162,31 @@ def get_vehiculo(id):
     try:
         cursor = connection.cursor(dictionary=True)
         cursor.execute("""
-            SELECT v.*, c.num_puertas, c.tipo_combustible, c.motor, 
-                   c.transmision, c.aire_acondicionado, c.direccion, 
-                   c.control_traccion, c.version
-            FROM vehiculos v
-            LEFT JOIN caracteristicas_vehiculo c ON v.id_vehiculo = c.id_vehiculo
-            WHERE v.id_vehiculo = %s
+            SELECT 
+                id_imagen,
+                url_imagen,
+                es_principal
+            FROM imagenes_vehiculo
+            WHERE id_vehiculo = %s
+            ORDER BY es_principal DESC, id_imagen ASC
         """, (id,))
-        vehiculo = cursor.fetchone()
-        cursor.close()
         
-        if vehiculo:
-            return jsonify(vehiculo), 200
-        else:
-            return jsonify({"error": "Vehículo no encontrado"}), 404
+        imagenes = cursor.fetchall()
+        
+        # Construir URLs completas
+        for img in imagenes:
+            img['url_imagen'] = f"http://localhost:5000/static/vehiculos/{img['url_imagen']}"
+        
+        cursor.close()
+        return jsonify(imagenes), 200
+        
     except Exception as e:
+        print(f"Error en get_imagenes_vehiculo: {str(e)}")
         return jsonify({"error": str(e)}), 500
     finally:
         close_db_connection(connection)
 
+        
 @app.route('/api/vehiculos', methods=['POST'])
 def crear_vehiculo():
     """Crea un nuevo vehículo con imágenes"""
@@ -255,28 +325,6 @@ def serve_vehiculo_image(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 # ========== ENDPOINTS DE IMÁGENES DE VEHÍCULOS ==========
-
-@app.route('/api/vehiculos/<int:id>/imagenes', methods=['GET'])
-def get_imagenes_vehiculo(id):
-    """Obtiene todas las imágenes de un vehículo"""
-    connection = get_db_connection()
-    if not connection:
-        return jsonify({"error": "Error de conexión a la base de datos"}), 500
-    
-    try:
-        cursor = connection.cursor(dictionary=True)
-        cursor.execute("""
-            SELECT * FROM imagenes_vehiculo 
-            WHERE id_vehiculo = %s 
-            ORDER BY es_principal DESC, orden ASC
-        """, (id,))
-        imagenes = cursor.fetchall()
-        cursor.close()
-        return jsonify(imagenes), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-    finally:
-        close_db_connection(connection)
 
 
 @app.route('/api/vehiculos/<int:id>/imagenes', methods=['POST'])
