@@ -78,14 +78,7 @@ function Home({ usuario }) {
 
       {/* Button Group */}
       <section className="home-buttons">
-        <button className="btn-primary">
-          <span className="material-symbols-outlined">add</span>
-          <span>Agregar Vehículo Nuevo</span>
-        </button>
-        <button className="btn-secondary">
-          <span className="material-symbols-outlined">person_add</span>
-          <span>Registrar Nuevo Cliente</span>
-        </button>
+        
         <button className="btn-secondary">
           <span className="material-symbols-outlined">bar_chart</span>
           <span>Gráfico Estadísticas</span>

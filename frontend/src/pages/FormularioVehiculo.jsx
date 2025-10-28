@@ -54,7 +54,7 @@ function FormularioVehiculo({ onClose, onSuccess }) {
       await crearVehiculo(formData);
       alert('Vehículo creado exitosamente');
       if (onSuccess) onSuccess();
-      navigate(-1); // ✅ Regresa a la vista anterior (por ejemplo /vehiculos)
+      navigate(-1); // 
     } catch (error) {
       console.error('Error al crear vehículo:', error);
       alert('Error al crear el vehículo');

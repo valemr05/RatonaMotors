@@ -33,7 +33,6 @@ export const crearVehiculo = async (vehiculoData) => {
   }
 };
 
-
 // ========== FUNCIONES DE IMÁGENES DE VEHÍCULOS ==========
 
 export const getImagenesVehiculo = async (id) => {
@@ -74,7 +73,6 @@ export const eliminarImagen = async (id) => {
   return response.json();
 };
 
-
 // ========== CLIENTES ==========
 export const getClientes = async () => {
   try {
@@ -113,6 +111,48 @@ export const crearVenta = async (ventaData) => {
     return response.data;
   } catch (error) {
     console.error('Error al crear venta:', error);
+    throw error;
+  }
+};
+
+// ========== EMPLEADOS/USUARIOS ==========
+
+export const getEmpleados = async () => {
+  try {
+    const response = await axios.get(`${API_URL}/usuarios`);
+    return response.data;
+  } catch (error) {
+    console.error('Error al obtener empleados:', error);
+    throw error;
+  }
+};
+
+export const crearEmpleado = async (empleadoData) => {
+  try {
+    const response = await axios.post(`${API_URL}/usuarios`, empleadoData);
+    return response.data;
+  } catch (error) {
+    console.error('Error al crear empleado:', error);
+    throw error;
+  }
+};
+
+export const actualizarEstadoEmpleado = async (id, activo) => {
+  try {
+    const response = await axios.patch(`${API_URL}/usuarios/${id}/estado`, { activo });
+    return response.data;
+  } catch (error) {
+    console.error('Error al actualizar estado del empleado:', error);
+    throw error;
+  }
+};
+
+export const eliminarEmpleado = async (id) => {
+  try {
+    const response = await axios.delete(`${API_URL}/usuarios/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error al eliminar empleado:', error);
     throw error;
   }
 };

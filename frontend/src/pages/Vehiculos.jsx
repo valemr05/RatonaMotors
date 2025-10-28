@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getVehiculos } from '../services/api';
-import {useNavigate} from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import './Vehiculos.css';
 
 function Vehiculos({ usuario }) {
@@ -15,6 +15,9 @@ function Vehiculos({ usuario }) {
     precioMax: 75000
   });
   const [ordenamiento, setOrdenamiento] = useState('precio-desc');
+
+  // Verificar si es vista pública (sin usuario)
+  const esVistaPublica = !usuario;
 
   useEffect(() => {
     const fetchVehiculos = async () => {
@@ -71,65 +74,55 @@ function Vehiculos({ usuario }) {
 
   return (
     <div className="vehiculos-container">
+      {/* Header con botón de login para vista pública */}
+      {esVistaPublica && (
+        <div className="vehiculos-header-publico">
+          <div className="header-publico-content">
+            <div className="logo-section">
+              <img 
+                src="/src/assets/minnieBL.png" 
+                alt="RatonaMotors Logo" 
+                className="logo-image"
+              />
+              <div className="logo-text">
+                <h1 className="logo-title"> RatonaMotors</h1>
+                <p className="logo-subtitle">Vehículos Premium</p>
+              </div>
+            </div>
+            <button 
+              className="btn-login-header"
+              onClick={() => navigate('/login')}
+            >
+              <span className="material-symbols-outlined">login</span>
+              Acceso Empleados
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Page Heading */}
       <div className="vehiculos-header">
         <div className="vehiculos-title-section">
-          <h1 className="vehiculos-title">Nuestro Catálogo</h1>
-          <p className="vehiculos-subtitle">Explore nuestra selección de vehículos premium.</p>
+          <h1 className="vehiculos-title">
+            {esVistaPublica ? 'Nuestro Catálogo' : 'Gestión de Vehículos'}
+          </h1>
+          <p className="vehiculos-subtitle">
+            {esVistaPublica 
+              ? 'Explore nuestra selección de vehículos premium.' 
+              : 'Administra el inventario de vehículos.'}
+          </p>
         </div>
       </div>
 
       <div className="vehiculos-content">
-        {/* Filter Sidebar */}
-        <aside className="vehiculos-sidebar">
-          <div className="filter-container">
-            <div className="filter-header">
-              <h2 className="filter-title">Filtros</h2>
-              <button onClick={resetFiltros} className="filter-reset">Reset</button>
-            </div>
-
-            {/* Marca Filter */}
-
-            {/* Rango de Precio */}
-            <div className="filter-section">
-              <h3 className="filter-section-title">Rango de Precio</h3>
-              <div className="price-range">
-                <div className="price-slider">
-                  <div className="price-slider-track">
-                    <div className="price-slider-fill"></div>
-                    <div className="price-slider-thumb-left"></div>
-                    <div className="price-slider-thumb-right"></div>
-                  </div>
-                </div>
-                <div className="price-labels">
-                  <span>${filtros.precioMin.toLocaleString()}</span>
-                  <span>${filtros.precioMax.toLocaleString()}</span>
-                </div>
-              </div>
-            </div>
-
-            <hr className="filter-divider" />
-
-            <button className="filter-apply-btn">Aplicar Filtros</button>
-          </div>
-        </aside>
-
+        
         {/* Main Content Area */}
         <div className="vehiculos-main">
           {/* Sort & View Controls */}
           <div className="vehiculos-controls">
             <p className="vehiculos-results">Mostrando {vehiculos.length} resultados</p>
             <div className="vehiculos-controls-right">
-              <select 
-                value={ordenamiento}
-                onChange={(e) => setOrdenamiento(e.target.value)}
-                className="vehiculos-sort-select"
-              >
-                <option value="precio-desc">Precio: Mayor a menor</option>
-                <option value="precio-asc">Precio: Menor a mayor</option>
-                <option value="año-desc">Año: Más nuevo</option>
-                <option value="kilometraje-asc">Kilometraje: Más bajo</option>
-              </select>
+              
               <div className="view-toggle">
                 <button className="view-btn active">
                   <span className="material-symbols-outlined">grid_view</span>
@@ -150,7 +143,9 @@ function Vehiculos({ usuario }) {
                     src={
                       vehiculo.imagen_principal 
                         ? `http://localhost:5000${vehiculo.imagen_principal}`
-                        : 'https://via.placeholder.com/400x300?text=Sin+Imagen'
+                        : vehiculo.imagen_url 
+                          ? `http://localhost:5000${vehiculo.imagen_url}`
+                          : 'https://via.placeholder.com/400x300?text=Sin+Imagen'
                     }
                     alt={`${vehiculo.marca} ${vehiculo.modelo}`}
                     className="vehiculo-image"
@@ -158,7 +153,6 @@ function Vehiculos({ usuario }) {
                       e.target.src = 'https://via.placeholder.com/400x300?text=Sin+Imagen';
                     }}
                   />
-
                   <div className="vehiculo-year-badge">{vehiculo.año}</div>
                 </div>
                 <div className="vehiculo-content">
@@ -173,8 +167,13 @@ function Vehiculos({ usuario }) {
                   <div className="vehiculo-footer">
                     <p className="vehiculo-price">${vehiculo.precio?.toLocaleString()}</p>
                   </div>
-                  <button className="vehiculo-btn"
-                  onClick={() => navigate(`/vehiculos/${vehiculo.id_vehiculo}`)}
+                  <button 
+                    className="vehiculo-btn"
+                    onClick={() => navigate(
+                      esVistaPublica 
+                        ? `/catalogo/${vehiculo.id_vehiculo}` 
+                        : `/vehiculos/${vehiculo.id_vehiculo}`
+                    )}
                   >
                     Ver Detalles
                   </button>

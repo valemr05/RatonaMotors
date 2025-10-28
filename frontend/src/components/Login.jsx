@@ -117,10 +117,7 @@ function Login({ onLogin }) {
           </div>
         </div>
 
-        {/* Sign Up Link */}
-        <p className="signup-text">
-          No tienes cuenta? <a className="signup-link" href="#">Registrarse</a>
-        </p>
+        
       </div>
 
       {/* Footer */}

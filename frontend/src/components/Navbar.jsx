@@ -5,13 +5,42 @@ function Navbar({ usuario, onLogout }) {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const menuItems = [
-    { path: '/', label: 'Inicio', icon: 'home' },
-    { path: '/vehiculos', label: 'Vehículos', icon: 'directions_car' },
-    { path: '/clientes', label: 'Clientes', icon: 'group' },
-    { path: '/formulario-vehiculo', label: 'Agregar Vehículo', icon: 'add_circle' },
-    { path: '/ventas', label: 'Ventas', icon: 'receipt_long' },
-  ];
+  // Definir items según el rol del usuario
+  const getMenuItems = () => {
+    const items = [];
+
+    // Dashboard/Inicio - Solo administradores
+    if (usuario?.rol === 'administrador') {
+      items.push({ path: '/dashboard', label: 'Dashboard', icon: 'dashboard' });
+    }
+
+    // Vehículos - Todos
+    items.push({ path: '/vehiculos', label: 'Vehículos', icon: 'directions_car' });
+
+    // Clientes - Todos
+    items.push({ path: '/clientes', label: 'Clientes', icon: 'group' });
+
+    // Ventas - Todos
+    items.push({ path: '/ventas', label: 'Ventas', icon: 'receipt_long' });
+
+    // Agregar Vehículo - Solo administradores
+    if (usuario?.rol === 'administrador') {
+      items.push({ path: '/formulario-vehiculo', label: 'Agregar Vehículo', icon: 'add_circle' });
+    }
+
+    // Agregar empleados - Solo administradores
+    if (usuario?.rol === 'administrador') {
+      items.push({ path: '/formulario-empleado', label: 'Agregar Empleado', icon: 'person_add' });
+    }
+    // Empleados - Solo administradores
+    if (usuario?.rol === 'administrador') {
+      items.push({ path: '/empleados', label: 'Empleados', icon: 'manage_accounts' });
+    }
+
+    return items;
+  };
+
+  const menuItems = getMenuItems();
 
   return (
     <aside className="navbar-sidebar">
@@ -50,7 +79,10 @@ function Navbar({ usuario, onLogout }) {
         <div className="navbar-footer">
           <div className="navbar-user">
             <span className="material-symbols-outlined">account_circle</span>
-            <p>{usuario.nombre} {usuario.apellido}</p>
+            <div className="navbar-user-info">
+              <p className="navbar-user-name">{usuario.nombre} {usuario.apellido}</p>
+              <p className="navbar-user-role">{usuario.rol}</p>
+            </div>
           </div>
           <div className="navbar-logout" onClick={onLogout}>
             <span className="material-symbols-outlined">logout</span>

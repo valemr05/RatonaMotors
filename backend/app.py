@@ -475,5 +475,39 @@ def get_dashboard_activities():
     finally:
         close_db_connection(connection)
 
+@app.route('/api/usuarios', methods=['POST'])
+def crear_usuario():
+    """Crea un nuevo usuario/empleado"""
+    data = request.json
+    connection = get_db_connection()
+    if not connection:
+        return jsonify({"error": "Error de conexión a la base de datos"}), 500
+    
+    try:
+        cursor = connection.cursor()
+        sql = """
+            INSERT INTO usuarios (nombre, apellido, email, password, rol, telefono, activo)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """
+        valores = (
+            data.get('nombre'),
+            data.get('apellido'),
+            data.get('email'),
+            data.get('password'),  # En producción deberías hashear la contraseña
+            data.get('rol', 'empleado'),
+            data.get('telefono'),
+            data.get('activo', True)
+        )
+        cursor.execute(sql, valores)
+        connection.commit()
+        id_usuario = cursor.lastrowid
+        cursor.close()
+        return jsonify({"mensaje": "Usuario creado exitosamente", "id": id_usuario}), 201
+    except Exception as e:
+        connection.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        close_db_connection(connection)
+
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
