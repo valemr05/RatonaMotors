@@ -51,20 +51,78 @@
 }
 
 /* Image Gallery */
-.detalle-galeria {
+/* Image Gallery */
+.galeria-section {
   width: 100%;
 }
 
 .imagen-principal {
   width: 100%;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: cover;
-  aspect-ratio: 16/9;
+  height: 350px; /* Altura fija para imagen principal */
   border-radius: 0.75rem;
   margin-bottom: 1rem;
-  background-color: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  background-color: rgba(255, 255, 255, 0.05);
 }
+
+.imagen-principal img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Cubre todo el contenedor */
+  object-position: center;
+  display: block;
+}
+
+/* Miniaturas */
+.imagenes-miniaturas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 0.75rem;
+  max-width: 100%;
+}
+
+.miniatura {
+  width: 100%;
+  height: 80px; /* Altura fija para miniaturas */
+  border-radius: 0.5rem;
+  overflow: hidden;
+  opacity: 0.6;
+  cursor: pointer;
+  transition: all 0.2s;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 2px solid transparent;
+}
+
+.miniatura:hover {
+  opacity: 0.9;
+  border-color: rgba(127, 19, 236, 0.5);
+}
+
+.miniatura.activa {
+  opacity: 1;
+  border-color: #7f13ec;
+  box-shadow: 0 0 0 2px rgba(127, 19, 236, 0.3);
+}
+
+.miniatura img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+/* Responsive para imagen principal */
+@media (max-width: 768px) {
+  .imagen-principal {
+    height: 250px;
+  }
+  
+  .miniatura {
+    height: 60px;
+  }
+}
+
 
 .thumbnails-grid {
   display: grid;

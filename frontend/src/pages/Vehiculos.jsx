@@ -139,17 +139,16 @@ function Vehiculos({ usuario }) {
             {vehiculos.map((vehiculo) => (
               <div key={vehiculo.id_vehiculo} className="vehiculo-card">
                 <div className="vehiculo-image-container">
-                      <div className="vehiculo-imagen-container">
-                        <img
-                          src={vehiculo.imagen_principal || 'https://via.placeholder.com/400x300?text=Sin+Imagen'}
-                          alt={`${vehiculo.marca} ${vehiculo.modelo}`}
-                          onError={(e) => {
-                            e.target.src = 'https://via.placeholder.com/400x300?text=Sin+Imagen';
-                          }}
-                        />
-                      </div>
+                  <img
+                    className="vehiculo-image"
+                    src={vehiculo.imagen_principal || 'https://via.placeholder.com/400x300?text=Sin+Imagen'}
+                    alt={`${vehiculo.marca} ${vehiculo.modelo}`}
+                    onError={(e) => {
+                      e.target.src = 'https://via.placeholder.com/400x300?text=Sin+Imagen';
+                    }}
+                  />
                   <div className="vehiculo-year-badge">{vehiculo.año}</div>
-                </div>
+                </div> 
                 <div className="vehiculo-content">
                   <h3 className="vehiculo-title">{vehiculo.marca} {vehiculo.modelo}</h3>
                   <div className="vehiculo-specs">
