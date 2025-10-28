@@ -1,14 +1,15 @@
 import { useState, useEffect } from 'react';
-import { getVehiculos, getClientes, crearVenta } from '../services/api';
+import { getVehiculos, getClientes, crearVenta, getEmpleados } from '../services/api';
 import './AgregarVenta.css';
 
-function AgregarVenta({ show, onClose, onSuccess }) {
+function AgregarVenta({ show, onClose, onSuccess, usuario }) {
   const [vehiculos, setVehiculos] = useState([]);
   const [clientes, setClientes] = useState([]);
+  const [empleados, setEmpleados] = useState([]);
   const [formData, setFormData] = useState({
     id_vehiculo: '',
     id_cliente: '',
-    id_usuario: 1, // Debes obtener esto del usuario logueado
+    id_usuario: usuario.id_usuario || '', // Obtener el ID del usuario logueado
     precio_venta: '',
     fecha_venta: '',
     forma_pago: '',
@@ -26,10 +27,12 @@ function AgregarVenta({ show, onClose, onSuccess }) {
     try {
       const [vehiculosData, clientesData] = await Promise.all([
         getVehiculos(),
-        getClientes()
+        getClientes(),
+        getEmpleados()
       ]);
       setVehiculos(vehiculosData.filter(v => v.disponible));
       setClientes(clientesData);
+      setEmpleados(empleadosData.filter(e => e.activo));
     } catch (error) {
       console.error('Error al cargar datos:', error);
     }
@@ -56,7 +59,7 @@ function AgregarVenta({ show, onClose, onSuccess }) {
       setFormData({
         id_vehiculo: '',
         id_cliente: '',
-        id_usuario: 1,
+        id_usuario: '',
         precio_venta: '',
         fecha_venta: '',
         forma_pago: '',
@@ -128,6 +131,26 @@ function AgregarVenta({ show, onClose, onSuccess }) {
                 ))}
               </select>
             </label>
+          </div>
+
+          {/* Vendedor */}
+          <div className="form-group">
+            <label htmlFor="id_usuario">
+              Vendedor <span className="required">*</span>
+            </label>
+            <input
+              type="text"
+              id="id_usuario"
+              value={`${usuario?.nombre || ''} ${usuario?.apellido || ''}`}
+              disabled
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                cursor: 'not-allowed'
+              }}
+            />
+            <small style={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.75rem' }}>
+              Las ventas se registran automáticamente a tu nombre
+            </small>
           </div>
 
           {/* Monto de Venta */}

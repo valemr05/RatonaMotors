@@ -88,6 +88,7 @@ function Ventas({ usuario }) {
                 <th>Fecha</th>
                 <th>Vehículo</th>
                 <th>Cliente</th>
+                <th>Vendedor</th>
                 <th className="text-right">Monto de Venta</th>
                 <th className="text-center">Estado</th>
                
@@ -109,6 +110,7 @@ function Ventas({ usuario }) {
                     </td>
                     <td className="font-semibold">{venta.vehiculo}</td>
                     <td className="text-gray">{venta.cliente}</td>
+                    <td className="text-gray">{venta.vendedor}</td>
                     <td className="font-semibold text-right">
                       ${parseFloat(venta.precio_venta).toLocaleString()}
                     </td>
@@ -154,12 +156,12 @@ function Ventas({ usuario }) {
           </ul>
         </nav>
       </div>
-      {/* Modal para agregar venta */}
       <AgregarVenta
         show={showModal}
         onClose={() => setShowModal(false)}
         onSuccess={handleSuccess}
-      />      
+        usuario={usuario}  // ← Agregar esta línea
+      /> 
     </div>
   );
 }
