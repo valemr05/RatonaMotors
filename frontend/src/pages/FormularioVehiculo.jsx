@@ -1,10 +1,9 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // ✅ Importar hook
-import { crearVehiculo } from '../services/api';
+import { useNavigate } from 'react-router-dom';
 import './FormularioVehiculo.css';
 
 function FormularioVehiculo({ onClose, onSuccess }) {
-  const navigate = useNavigate(); // ✅ Inicializar navegación
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     marca: '',
@@ -14,7 +13,6 @@ function FormularioVehiculo({ onClose, onSuccess }) {
     precio: '',
     kilometraje: 0,
     estado: 'nuevo',
-    imagen_url: '',
     caracteristicas: {
       num_puertas: 4,
       tipo_combustible: 'Gasolina',
@@ -26,6 +24,10 @@ function FormularioVehiculo({ onClose, onSuccess }) {
       version: ''
     }
   });
+
+  const [imagenes, setImagenes] = useState([]);
+  const [previews, setPreviews] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -47,24 +49,86 @@ function FormularioVehiculo({ onClose, onSuccess }) {
     }
   };
 
+  // Manejar selección de imágenes
+  const handleImagenesChange = (e) => {
+    const files = Array.from(e.target.files);
+    
+    if (files.length + imagenes.length > 5) {
+      alert('⚠️ Puedes subir máximo 5 imágenes');
+      return;
+    }
+
+    setImagenes(prev => [...prev, ...files]);
+
+    // Generar previews
+    const newPreviews = files.map(file => URL.createObjectURL(file));
+    setPreviews(prev => [...prev, ...newPreviews]);
+  };
+
+  // Eliminar imagen de la selección
+  const handleRemoveImage = (index) => {
+    setImagenes(prev => prev.filter((_, i) => i !== index));
+    setPreviews(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
+    if (imagenes.length === 0) {
+      alert('⚠️ Debes subir al menos una imagen');
+      return;
+    }
+
+    setLoading(true);
+
     try {
-      await crearVehiculo(formData);
-      alert('Vehículo creado exitosamente');
+      // Crear FormData para enviar archivos
+      const formDataToSend = new FormData();
+      
+      // Agregar datos del vehículo
+      formDataToSend.append('marca', formData.marca);
+      formDataToSend.append('modelo', formData.modelo);
+      formDataToSend.append('año', formData.año);
+      formDataToSend.append('color', formData.color);
+      formDataToSend.append('precio', formData.precio);
+      formDataToSend.append('kilometraje', formData.kilometraje);
+      formDataToSend.append('estado', formData.estado);
+      formDataToSend.append('caracteristicas', JSON.stringify(formData.caracteristicas));
+
+      // Agregar imágenes
+      imagenes.forEach((imagen, index) => {
+        formDataToSend.append('imagenes', imagen);
+        if (index === 0) {
+          formDataToSend.append('imagen_principal_index', 0);
+        }
+      });
+
+      // Enviar al backend
+      const response = await fetch('http://localhost:5000/api/vehiculos', {
+        method: 'POST',
+        body: formDataToSend
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al crear vehículo');
+      }
+
+      const result = await response.json();
+      alert('✅ Vehículo creado exitosamente');
+      
       if (onSuccess) onSuccess();
-      navigate(-1); // 
+      navigate(-1);
     } catch (error) {
       console.error('Error al crear vehículo:', error);
-      alert('Error al crear el vehículo');
+      alert('❌ Error: ' + error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // ✅ Nueva función para cerrar (sirve tanto en modal como en ruta)
   const handleClose = () => {
-    if (onClose) onClose(); // Si se abrió como modal
-    else navigate(-1);      // Si se abrió como ruta (por URL)
+    if (onClose) onClose();
+    else navigate(-1);
   };
 
   return (
@@ -74,12 +138,12 @@ function FormularioVehiculo({ onClose, onSuccess }) {
         <header className="form-header">
           <div className="header-brand">
             <div className="brand-icon flex items-center justify-center gap-2 mb-6">
-          <img
-            src="/src/assets/minnieBL.png"
-            alt="Logo Ratona Motors"
-            style={{ width: '50px', height: '46px' }}
-            className=" object-contain"
-          />
+              <img
+                src="/src/assets/minnieBL.png"
+                alt="Logo Ratona Motors"
+                style={{ width: '50px', height: '46px' }}
+                className="object-contain"
+              />
             </div>
             <h2>RatonaMotors</h2>
           </div>
@@ -98,7 +162,7 @@ function FormularioVehiculo({ onClose, onSuccess }) {
               <h2 className="section-title">Información Básica</h2>
               <div className="form-grid">
                 <div className="form-field">
-                  <label>Marca</label>
+                  <label>Marca *</label>
                   <input
                     type="text"
                     name="marca"
@@ -110,7 +174,7 @@ function FormularioVehiculo({ onClose, onSuccess }) {
                 </div>
 
                 <div className="form-field">
-                  <label>Modelo</label>
+                  <label>Modelo *</label>
                   <input
                     type="text"
                     name="modelo"
@@ -122,7 +186,7 @@ function FormularioVehiculo({ onClose, onSuccess }) {
                 </div>
 
                 <div className="form-field">
-                  <label>Año</label>
+                  <label>Año *</label>
                   <input
                     type="number"
                     name="año"
@@ -135,7 +199,7 @@ function FormularioVehiculo({ onClose, onSuccess }) {
                 </div>
 
                 <div className="form-field">
-                  <label>Precio</label>
+                  <label>Precio *</label>
                   <input
                     type="number"
                     name="precio"
@@ -160,7 +224,7 @@ function FormularioVehiculo({ onClose, onSuccess }) {
                 </div>
 
                 <div className="form-field">
-                  <label>Color</label>
+                  <label>Color *</label>
                   <input
                     type="text"
                     name="color"
@@ -182,17 +246,6 @@ function FormularioVehiculo({ onClose, onSuccess }) {
                     <option value="usado">Usado</option>
                   </select>
                 </div>
-
-                <div className="form-field full-width">
-                  <label>URL de Imagen</label>
-                  <input
-                    type="url"
-                    name="imagen_url"
-                    value={formData.imagen_url}
-                    onChange={handleInputChange}
-                    placeholder="https://ejemplo.com/imagen.jpg"
-                  />
-                </div>
               </div>
             </section>
 
@@ -200,19 +253,163 @@ function FormularioVehiculo({ onClose, onSuccess }) {
             <section className="form-section">
               <h2 className="section-title">Especificaciones Técnicas</h2>
               <div className="form-grid">
-                {/* Aquí van tus campos técnicos como antes */}
-                {/* (omito para que no se repita todo, pero no cambian) */}
+                <div className="form-field">
+                  <label>Motor</label>
+                  <input
+                    type="text"
+                    name="caract_motor"
+                    value={formData.caracteristicas.motor}
+                    onChange={handleInputChange}
+                    placeholder="e.g., 2.0L Turbo"
+                  />
+                </div>
+
+                <div className="form-field">
+                  <label>Tipo de Combustible</label>
+                  <select
+                    name="caract_tipo_combustible"
+                    value={formData.caracteristicas.tipo_combustible}
+                    onChange={handleInputChange}
+                  >
+                    <option value="Gasolina">Gasolina</option>
+                    <option value="Diesel">Diesel</option>
+                    <option value="Eléctrico">Eléctrico</option>
+                    <option value="Híbrido">Híbrido</option>
+                  </select>
+                </div>
+
+                <div className="form-field">
+                  <label>Transmisión</label>
+                  <select
+                    name="caract_transmision"
+                    value={formData.caracteristicas.transmision}
+                    onChange={handleInputChange}
+                  >
+                    <option value="Manual">Manual</option>
+                    <option value="Automático">Automático</option>
+                  </select>
+                </div>
+
+                <div className="form-field">
+                  <label>Número de Puertas</label>
+                  <input
+                    type="number"
+                    name="caract_num_puertas"
+                    value={formData.caracteristicas.num_puertas}
+                    onChange={handleInputChange}
+                    min="2"
+                    max="5"
+                  />
+                </div>
+
+                <div className="form-field">
+                  <label>Dirección</label>
+                  <select
+                    name="caract_direccion"
+                    value={formData.caracteristicas.direccion}
+                    onChange={handleInputChange}
+                  >
+                    <option value="Hidraulica">Hidráulica</option>
+                    <option value="Electrica">Eléctrica</option>
+                  </select>
+                </div>
+
+                <div className="form-field">
+                  <label>Tracción</label>
+                  <select
+                    name="caract_control_traccion"
+                    value={formData.caracteristicas.control_traccion}
+                    onChange={handleInputChange}
+                  >
+                    <option value="4x2">4x2</option>
+                    <option value="4x4">4x4</option>
+                    <option value="AWD">AWD</option>
+                  </select>
+                </div>
+
+                <div className="form-field">
+                  <label>Versión</label>
+                  <input
+                    type="text"
+                    name="caract_version"
+                    value={formData.caracteristicas.version}
+                    onChange={handleInputChange}
+                    placeholder="e.g., Limited Edition"
+                  />
+                </div>
+
+                <div className="form-field checkbox-field">
+                  <label>
+                    <input
+                      type="checkbox"
+                      name="caract_aire_acondicionado"
+                      checked={formData.caracteristicas.aire_acondicionado}
+                      onChange={handleInputChange}
+                    />
+                    <span>Aire Acondicionado</span>
+                  </label>
+                </div>
               </div>
+            </section>
+
+            {/* Imágenes */}
+            <section className="form-section">
+              <h2 className="section-title">Imágenes del Vehículo *</h2>
+              
+              <div className="upload-section">
+                <label htmlFor="imagenes" className="upload-label">
+                  <span className="material-symbols-outlined">add_photo_alternate</span>
+                  <span>Seleccionar imágenes</span>
+                  <span className="upload-hint">(Máximo 5 imágenes)</span>
+                </label>
+                <input
+                  type="file"
+                  id="imagenes"
+                  accept="image/*"
+                  multiple
+                  onChange={handleImagenesChange}
+                  style={{ display: 'none' }}
+                />
+              </div>
+
+              {previews.length > 0 && (
+                <div className="preview-grid">
+                  {previews.map((preview, index) => (
+                    <div key={index} className="preview-item">
+                      <img src={preview} alt={`Preview ${index + 1}`} />
+                      <button
+                        type="button"
+                        className="preview-remove"
+                        onClick={() => handleRemoveImage(index)}
+                      >
+                        <span className="material-symbols-outlined">close</span>
+                      </button>
+                      {index === 0 && (
+                        <span className="preview-badge">Principal</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </section>
 
             {/* Botones de acción */}
             <div className="form-actions">
-              <button type="button" className="btn-cancel" onClick={handleClose}>
+              <button type="button" className="btn-cancel" onClick={handleClose} disabled={loading}>
                 Cancelar
               </button>
-              <button type="submit" className="btn-save">
-                <span className="icon">💾</span>
-                Guardar Vehículo
+              <button type="submit" className="btn-save" disabled={loading}>
+                {loading ? (
+                  <>
+                    <span className="spinner"></span>
+                    Guardando...
+                  </>
+                ) : (
+                  <>
+                    <span className="icon">💾</span>
+                    Guardar Vehículo
+                  </>
+                )}
               </button>
             </div>
           </form>

@@ -295,3 +295,132 @@
     font-size: 1.125rem;
   }
 }
+
+/* Sección de subida de imágenes */
+.upload-section {
+  width: 100%;
+  margin-bottom: 1.5rem;
+}
+
+.upload-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 3rem 2rem;
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 2px dashed rgba(255, 255, 255, 0.2);
+  border-radius: 0.75rem;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.upload-label:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-color: #7f13ec;
+  color: white;
+}
+
+.upload-label .material-symbols-outlined {
+  font-size: 3rem;
+  color: #7f13ec;
+}
+
+.upload-label span:nth-child(2) {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.upload-hint {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* Grid de previews */
+.preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.preview-item {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.2s;
+}
+
+.preview-item:hover {
+  border-color: #7f13ec;
+  transform: scale(1.05);
+}
+
+.preview-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.preview-remove {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(239, 68, 68, 0.9);
+  border: none;
+  border-radius: 50%;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  z-index: 10;
+}
+
+.preview-remove:hover {
+  background-color: #ef4444;
+  transform: scale(1.1);
+}
+
+.preview-remove .material-symbols-outlined {
+  font-size: 1.25rem;
+}
+
+.preview-badge {
+  position: absolute;
+  bottom: 0.5rem;
+  left: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  background-color: rgba(127, 19, 236, 0.9);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 9999px;
+  z-index: 10;
+}
+
+/* Spinner de carga */
+.spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.btn-save:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

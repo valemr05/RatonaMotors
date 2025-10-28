@@ -1,5 +1,11 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+from flask import send_from_directory
+
+import os
+import time
+import json
+from werkzeug.utils import secure_filename
 from config import get_db_connection, close_db_connection
 
 app = Flask(__name__)
@@ -9,6 +15,22 @@ CORS(app)  # Permite que React se conecte
 @app.route('/')
 def home():
     return jsonify({"mensaje": "API de RatonaMotors funcionando correctamente"})
+
+# ========== CONFIGURACIÓN DE ARCHIVOS ESTÁTICOS ==========
+# Carpeta donde se guardarán las imágenes
+UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'vehiculos')
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+
+# Crear carpeta si no existe
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB máximo por archivo
+
+def allowed_file(filename):
+    """Verifica si el archivo tiene una extensión permitida"""
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # ========== ENDPOINTS DE VEHÍCULOS ==========
 
@@ -32,22 +54,39 @@ def get_vehiculos():
                 c.direccion, 
                 c.control_traccion, 
                 c.version,
-                COALESCE(img.url_imagen, v.imagen_url) as imagen_principal
+                    GROUP_CONCAT(
+                    CONCAT('http://localhost:5000/static/vehiculos/', iv.url_imagen)
+                    ORDER BY iv.es_principal DESC
+                    SEPARATOR ','
+                ) as imagenes
             FROM vehiculos v
             LEFT JOIN caracteristicas_vehiculo c ON v.id_vehiculo = c.id_vehiculo
-            LEFT JOIN imagenes_vehiculo img 
-                ON v.id_vehiculo = img.id_vehiculo 
-                AND img.es_principal = TRUE
+            LEFT JOIN imagenes_vehiculo iv ON v.id_vehiculo = iv.id_vehiculo
             WHERE v.disponible = TRUE
+            GROUP BY v.id_vehiculo
             ORDER BY v.fecha_registro DESC
         """)
         vehiculos = cursor.fetchall()
+        
+        # Convertir string de imágenes a array
+        for vehiculo in vehiculos:
+            if vehiculo['imagenes']:
+                vehiculo['imagenes'] = vehiculo['imagenes'].split(',')
+                vehiculo['imagen_principal'] = vehiculo['imagenes'][0] if vehiculo['imagenes'] else None
+            else:
+                vehiculo['imagenes'] = []
+                vehiculo['imagen_principal'] = None
+        
         cursor.close()
         return jsonify(vehiculos), 200
+        
     except Exception as e:
+        print(f"Error en get_vehiculos: {str(e)}")
         return jsonify({"error": str(e)}), 500
     finally:
         close_db_connection(connection)
+
+
 
 @app.route('/api/vehiculos/<int:id>', methods=['GET'])
 def get_vehiculo(id):
@@ -80,43 +119,67 @@ def get_vehiculo(id):
 
 @app.route('/api/vehiculos', methods=['POST'])
 def crear_vehiculo():
-    """Crea un nuevo vehículo"""
-    data = request.json
+    """Crea un nuevo vehículo con imágenes"""
     connection = get_db_connection()
     if not connection:
         return jsonify({"error": "Error de conexión a la base de datos"}), 500
     
     try:
+        # Verificar que sea multipart/form-data
+        if not request.content_type or 'multipart/form-data' not in request.content_type:
+            return jsonify({"error": "Content-Type debe ser multipart/form-data"}), 415
+        
+        # Obtener datos del formulario
+        marca = request.form.get('marca')
+        modelo = request.form.get('modelo')
+        año = request.form.get('año')
+        color = request.form.get('color')
+        precio = request.form.get('precio')
+        kilometraje = request.form.get('kilometraje', 0)
+        estado = request.form.get('estado', 'nuevo')
+        caracteristicas = request.form.get('caracteristicas')
+        
+        print(f"Datos recibidos: marca={marca}, modelo={modelo}, año={año}")
+        print(f"Archivos recibidos: {request.files}")
+        
+        # Validar campos requeridos
+        if not all([marca, modelo, año, color, precio]):
+            return jsonify({"error": "Faltan campos requeridos"}), 400
+        
         cursor = connection.cursor()
         
         # Insertar vehículo
         sql_vehiculo = """
-            INSERT INTO vehiculos (marca, modelo, año, color, precio, kilometraje, estado, imagen_url)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO vehiculos 
+            (marca, modelo, año, color, precio, kilometraje, estado)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
         """
-        valores_vehiculo = (
-            data.get('marca'),
-            data.get('modelo'),
-            data.get('año'),
-            data.get('color'),
-            data.get('precio'),
-            data.get('kilometraje', 0),
-            data.get('estado', 'nuevo'),
-            data.get('imagen_url')
-        )
-        cursor.execute(sql_vehiculo, valores_vehiculo)
+        cursor.execute(sql_vehiculo, (
+            marca, modelo, año, color, precio, kilometraje, estado
+        ))
+        
         id_vehiculo = cursor.lastrowid
+        print(f"Vehículo creado con ID: {id_vehiculo}")
+        
+        # Crear nombre de carpeta (marca-modelo limpio)
+        folder_name = f"{marca.lower().replace(' ', '-')}-{modelo.lower().replace(' ', '-')}-{id_vehiculo}"
+        vehicle_folder = os.path.join(app.config['UPLOAD_FOLDER'], folder_name)
+        
+        # Crear carpeta del vehículo si no existe
+        if not os.path.exists(vehicle_folder):
+            os.makedirs(vehicle_folder)
+            print(f"Carpeta creada: {vehicle_folder}")
         
         # Insertar características si existen
-        if 'caracteristicas' in data:
-            caract = data['caracteristicas']
+        if caracteristicas:
+            caract = json.loads(caracteristicas)
             sql_caracteristicas = """
-                INSERT INTO caracteristicas_vehiculo 
-                (id_vehiculo, num_puertas, tipo_combustible, motor, transmision, 
+                INSERT INTO caracteristicas_vehiculo
+                (id_vehiculo, num_puertas, tipo_combustible, motor, transmision,
                  aire_acondicionado, direccion, control_traccion, version)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             """
-            valores_caracteristicas = (
+            cursor.execute(sql_caracteristicas, (
                 id_vehiculo,
                 caract.get('num_puertas'),
                 caract.get('tipo_combustible'),
@@ -126,17 +189,70 @@ def crear_vehiculo():
                 caract.get('direccion'),
                 caract.get('control_traccion'),
                 caract.get('version')
-            )
-            cursor.execute(sql_caracteristicas, valores_caracteristicas)
+            ))
+            print("Características insertadas")
+        
+        # Procesar imágenes
+        imagenes = request.files.getlist('imagenes')
+        imagen_principal_index = int(request.form.get('imagen_principal_index', 0))
+        
+        print(f"Número de imágenes recibidas: {len(imagenes)}")
+        
+        if not imagenes or len(imagenes) == 0:
+            connection.rollback()
+            return jsonify({"error": "Debes subir al menos una imagen"}), 400
+        
+        for index, imagen in enumerate(imagenes):
+            if imagen and imagen.filename and allowed_file(imagen.filename):
+                # Generar nombre único
+                filename = secure_filename(imagen.filename)
+                timestamp = int(time.time())
+                unique_filename = f"{timestamp}_{index}_{filename}"
+                
+                # Guardar en la carpeta del vehículo
+                filepath = os.path.join(vehicle_folder, unique_filename)
+                
+                print(f"Guardando imagen: {folder_name}/{unique_filename}")
+                
+                # Guardar archivo
+                imagen.save(filepath)
+                
+                # Guardar en BD con la ruta relativa (carpeta/archivo)
+                url_relativa = f"{folder_name}/{unique_filename}"
+                es_principal = 1 if index == imagen_principal_index else 0
+                
+                sql_imagen = """
+                    INSERT INTO imagenes_vehiculo 
+                    (id_vehiculo, url_imagen, es_principal)
+                    VALUES (%s, %s, %s)
+                """
+                cursor.execute(sql_imagen, (id_vehiculo, url_relativa, es_principal))
+                print(f"Imagen guardada en BD: {url_relativa}, es_principal={es_principal}")
         
         connection.commit()
         cursor.close()
-        return jsonify({"mensaje": "Vehículo creado exitosamente", "id": id_vehiculo}), 201
+        
+        print("✅ Vehículo creado exitosamente")
+        return jsonify({
+            "mensaje": "Vehículo creado exitosamente",
+            "id": id_vehiculo
+        }), 201
+        
     except Exception as e:
         connection.rollback()
+        print(f"❌ Error en crear_vehiculo: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
     finally:
         close_db_connection(connection)
+
+
+
+@app.route('/static/vehiculos/<path:filename>')
+def serve_vehiculo_image(filename):
+    """Sirve las imágenes de los vehículos"""
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 # ========== ENDPOINTS DE IMÁGENES DE VEHÍCULOS ==========
 
@@ -509,5 +625,208 @@ def crear_usuario():
     finally:
         close_db_connection(connection)
 
+@app.route('/api/usuarios', methods=['GET'])
+def get_usuarios():
+    """Obtiene todos los usuarios/empleados"""
+    connection = get_db_connection()
+    if not connection:
+        return jsonify({"error": "Error de conexión a la base de datos"}), 500
+    
+    try:
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT id_usuario, nombre, apellido, email, rol, telefono, activo, fecha_registro
+            FROM usuarios 
+            ORDER BY fecha_registro DESC
+        """)
+        usuarios = cursor.fetchall()
+        cursor.close()
+        return jsonify(usuarios), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        close_db_connection(connection)
+
+@app.route('/api/usuarios/<int:id>/estado', methods=['PATCH'])
+def actualizar_estado_usuario(id):
+    """Actualiza el estado activo/inactivo de un usuario"""
+    data = request.json
+    connection = get_db_connection()
+    if not connection:
+        return jsonify({"error": "Error de conexión a la base de datos"}), 500
+    
+    try:
+        cursor = connection.cursor()
+        cursor.execute("UPDATE usuarios SET activo = %s WHERE id_usuario = %s", 
+                      (data.get('activo'), id))
+        connection.commit()
+        cursor.close()
+        return jsonify({"mensaje": "Estado actualizado exitosamente"}), 200
+    except Exception as e:
+        connection.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        close_db_connection(connection)
+
+
+@app.route('/api/usuarios/<int:id>', methods=['DELETE'])
+def eliminar_usuario(id):
+    """Elimina un usuario"""
+    connection = get_db_connection()
+    if not connection:
+        return jsonify({"error": "Error de conexión a la base de datos"}), 500
+    
+    try:
+        cursor = connection.cursor()
+        cursor.execute("DELETE FROM usuarios WHERE id_usuario = %s", (id,))
+        connection.commit()
+        cursor.close()
+        return jsonify({"mensaje": "Usuario eliminado exitosamente"}), 200
+    except Exception as e:
+        connection.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        close_db_connection(connection)
+
+# ========== ENDPOINTS DE PRUEBAS DE MANEJO ==========
+
+@app.route('/api/pruebas-manejo', methods=['GET'])
+def get_pruebas_manejo():
+    """Obtiene todas las pruebas de manejo"""
+    connection = get_db_connection()
+    if not connection:
+        return jsonify({"error": "Error de conexión a la base de datos"}), 500
+    
+    try:
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT 
+                pm.id_prueba,
+                pm.id_vehiculo,
+                pm.id_cliente,
+                COALESCE(c.nombre, pm.nombre_solicitante) AS nombre,
+                COALESCE(c.apellido, pm.apellido_solicitante) AS apellido,
+                COALESCE(c.documento, pm.documento_solicitante) AS documento,
+                COALESCE(c.telefono, pm.telefono_solicitante) AS telefono,
+                COALESCE(c.email, pm.email_solicitante) AS email,
+                pm.fecha_prueba,
+                pm.hora_prueba,
+                pm.id_empleado_asignado,
+                pm.estado,
+                pm.observaciones,
+                pm.fecha_solicitud,
+                v.marca,
+                v.modelo,
+                v.año,
+                CONCAT(u.nombre, ' ', u.apellido) AS empleado_asignado
+            FROM pruebas_manejo pm
+            JOIN vehiculos v ON pm.id_vehiculo = v.id_vehiculo
+            LEFT JOIN usuarios u ON pm.id_empleado_asignado = u.id_usuario
+            LEFT JOIN clientes c ON pm.id_cliente = c.id_cliente
+            ORDER BY pm.fecha_prueba DESC, pm.hora_prueba DESC
+        """)
+
+        pruebas = cursor.fetchall()
+        cursor.close()
+
+        for p in pruebas:
+            if isinstance(p.get("hora_prueba"), (dict,)):
+                continue
+            if "hora_prueba" in p and p["hora_prueba"] is not None:
+                p["hora_prueba"] = str(p["hora_prueba"])
+
+        return jsonify(pruebas), 200
+    except Exception as e:
+        print(f"Error en get_pruebas_manejo: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+    finally:
+        close_db_connection(connection)
+
+
+@app.route('/api/pruebas-manejo', methods=['POST'])
+def crear_prueba_manejo():
+    """Crea una nueva prueba de manejo"""
+    data = request.json
+    connection = get_db_connection()
+    if not connection:
+        return jsonify({"error": "Error de conexión a la base de datos"}), 500
+    
+    try:
+        cursor = connection.cursor()
+        sql = """
+            INSERT INTO pruebas_manejo 
+            (id_vehiculo, id_cliente, nombre_solicitante, apellido_solicitante, 
+             documento_solicitante, telefono_solicitante, email_solicitante, 
+             fecha_prueba, hora_prueba, observaciones, estado)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'pendiente')
+        """
+        valores = (
+            data.get('id_vehiculo'),
+            data.get('id_cliente'),
+            data.get('nombre'),
+            data.get('apellido'),
+            data.get('documento'),
+            data.get('telefono'),
+            data.get('email'),
+            data.get('fecha_prueba'),
+            data.get('hora_prueba'),
+            data.get('observaciones')
+        )
+        cursor.execute(sql, valores)
+        connection.commit()
+        id_prueba = cursor.lastrowid
+        cursor.close()
+        
+        return jsonify({
+            "mensaje": "Prueba de manejo agendada exitosamente",
+            "id": id_prueba
+        }), 201
+    except Exception as e:
+        connection.rollback()
+        print(f"Error en crear_prueba_manejo: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+    finally:
+        close_db_connection(connection)
+
+
+@app.route('/api/pruebas-manejo/<int:id>/estado', methods=['PATCH'])
+def actualizar_estado_prueba(id):
+    """Actualiza el estado de una prueba de manejo"""
+    data = request.json
+    connection = get_db_connection()
+    if not connection:
+        return jsonify({"error": "Error de conexión a la base de datos"}), 500
+    
+    try:
+        cursor = connection.cursor()
+        
+        if data.get('id_empleado_asignado'):
+            cursor.execute("""
+                UPDATE pruebas_manejo 
+                SET estado = %s, id_empleado_asignado = %s 
+                WHERE id_prueba = %s
+            """, (data.get('estado'), data.get('id_empleado_asignado'), id))
+        else:
+            cursor.execute("""
+                UPDATE pruebas_manejo 
+                SET estado = %s 
+                WHERE id_prueba = %s
+            """, (data.get('estado'), id))
+        
+        connection.commit()
+        cursor.close()
+        
+        return jsonify({
+            "mensaje": "Estado actualizado exitosamente",
+            "estado": data.get('estado')
+        }), 200
+    except Exception as e:
+        connection.rollback()
+        print(f"Error en actualizar_estado_prueba: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+    finally:
+        close_db_connection(connection)
+
+         
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(debug=True, port=5000, use_reloader=False)

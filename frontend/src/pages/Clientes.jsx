@@ -108,24 +108,7 @@ function Clientes() {
           >
             Todos
           </button>
-          <button 
-            className={`chip ${filterStatus === 'activo' ? 'chip-active' : ''}`}
-            onClick={() => setFilterStatus('activo')}
-          >
-            Activo
-          </button>
-          <button 
-            className={`chip ${filterStatus === 'prospecto' ? 'chip-active' : ''}`}
-            onClick={() => setFilterStatus('prospecto')}
-          >
-            Prospecto
-          </button>
-          <button 
-            className={`chip ${filterStatus === 'inactivo' ? 'chip-active' : ''}`}
-            onClick={() => setFilterStatus('inactivo')}
-          >
-            Inactivo
-          </button>
+          
         </div>
       </div>
 
@@ -139,7 +122,7 @@ function Clientes() {
                 <th>Contacto</th>
                 <th>Documento</th>
                 <th>Dirección</th>
-                <th>Acciones</th>
+                
               </tr>
             </thead>
             <tbody>
@@ -154,9 +137,7 @@ function Clientes() {
                   </td>
                   <td>{cliente.documento}</td>
                   <td className="address-cell">{cliente.direccion || 'N/A'}</td>
-                  <td>
-                    <button className="btn-link">Ver Detalles</button>
-                  </td>
+                  
                 </tr>
               ))}
             </tbody>

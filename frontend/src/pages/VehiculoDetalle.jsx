@@ -1,17 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getVehiculo, getImagenesVehiculo } from '../services/api';
+import ModalPruebaManejo from './ModalPruebaManejo';
 import './VehiculoDetalle.css';
 
 function VehiculoDetalle() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [vehiculo, setVehiculo] = useState(null);
-  const [imagenes, setImagenes] = useState([]); // ✅ Variable declarada
+  const [imagenes, setImagenes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [imagenActiva, setImagenActiva] = useState(0);
   const [tabActiva, setTabActiva] = useState('descripcion');
+  const [mostrarModal, setMostrarModal] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -184,11 +186,12 @@ function VehiculoDetalle() {
 
           {/* Action Buttons */}
           <div className="detalle-actions">
-            <button className="btn-primary-detalle">
-              <span className="truncate">Solicitar Prueba de Manejo</span>
-            </button>
-            <button className="btn-secondary-detalle">
-              <span className="truncate">Contactar Vendedor</span>
+            <button 
+              className="btn-prueba-manejo"
+              onClick={() => setMostrarModal(true)}
+            >
+              <span className="material-symbols-outlined">directions_car</span>
+              Agendar Prueba de Manejo
             </button>
           </div>
         </div>
@@ -333,6 +336,17 @@ function VehiculoDetalle() {
           )}
         </div>
       </div>
+
+      {/* Modal - Fuera de todo el contenido principal */}
+      {mostrarModal && (
+        <ModalPruebaManejo
+          vehiculo={vehiculo}
+          onClose={() => setMostrarModal(false)}
+          onSuccess={() => {
+            console.log('Prueba agendada exitosamente');
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -28,14 +28,13 @@ function Navbar({ usuario, onLogout }) {
       items.push({ path: '/formulario-vehiculo', label: 'Agregar Vehículo', icon: 'add_circle' });
     }
 
-    // Agregar empleados - Solo administradores
-    if (usuario?.rol === 'administrador') {
-      items.push({ path: '/formulario-empleado', label: 'Agregar Empleado', icon: 'person_add' });
-    }
     // Empleados - Solo administradores
     if (usuario?.rol === 'administrador') {
       items.push({ path: '/empleados', label: 'Empleados', icon: 'manage_accounts' });
     }
+
+    // Pruebas de Manejo - Todos
+    items.push({ path: '/pruebas-manejo', label: 'Pruebas de Manejo', icon: 'drive_eta' });
 
     return items;
   };

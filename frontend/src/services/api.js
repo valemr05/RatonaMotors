@@ -189,3 +189,44 @@ export const getDashboardActivities = async () => {
   
   return response.json();
 };
+
+// ========== PRUEBAS DE MANEJO ==========
+
+export const getPruebasManejo = async () => {
+  try {
+    const response = await axios.get(`${API_URL}/pruebas-manejo`);
+    return response.data;
+  } catch (error) {
+    console.error('Error al obtener pruebas de manejo:', error);
+    throw error;
+  }
+};
+
+export const crearPruebaManejo = async (pruebaData) => {
+  try {
+    const response = await axios.post(`${API_URL}/pruebas-manejo`, pruebaData);
+    return response.data;
+  } catch (error) {
+    console.error('Error al crear prueba de manejo:', error);
+    throw error;
+  }
+};
+
+export const actualizarEstadoPrueba = async (id, estado, idEmpleado = null) => {
+  try {
+    const response = await axios.patch(`${API_URL}/pruebas-manejo/${id}`, { 
+      estado,
+      id_empleado_asignado: idEmpleado 
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error al actualizar estado de prueba:', error);
+    throw error;
+  }
+};
+
+
+
+
+//actualizar estado 
+

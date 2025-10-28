@@ -14,6 +14,7 @@ import Login from './components/Login';
 import Unauthorized from './pages/Unauthorized';
 import FormularioEmpleado from './pages/FormularioEmpleado';
 import Empleados from './pages/Empleados';
+import PruebasManejo from './pages/PruebasManejo';
 
 
 import './App.css';
@@ -162,6 +163,18 @@ function App() {
                           />
                         } 
                       />
+
+                      {/* Pruebas de Manejo - Todos */}
+
+                      <Route
+                        path="/pruebas-manejo"
+                        element={
+                          <ProtectedRoute allowedRoles={['administrador', 'empleado']}>
+                            <PruebasManejo usuario={usuario} />
+                          </ProtectedRoute>
+                        }
+                      />
+
 
                     </Routes>
                   </main>
