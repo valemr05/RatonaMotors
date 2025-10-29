@@ -183,6 +183,17 @@ function VehiculoDetalle() {
               <span className="material-symbols-outlined">directions_car</span>
               Agendar Prueba de Manejo
             </button>
+             
+            <button 
+              className="btn-contactar-asesor"
+              onClick={() => {
+                
+                window.location.href = `https://wa.me/573001234567?text=Hola, me interesa el ${vehiculo.marca} ${vehiculo.modelo} ${vehiculo.año}`;
+              }}
+            >
+              <span className="material-symbols-outlined">support_agent</span>
+              Contactar a un Asesor
+            </button>             
           </div>
         </div>
       </div>

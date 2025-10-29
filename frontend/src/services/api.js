@@ -225,8 +225,53 @@ export const actualizarEstadoPrueba = async (id, estado, idEmpleado = null) => {
   }
 };
 
+// Notificaciones
+export const getNotificacionesPendientes = async () => {
+  const response = await fetch(`${API_URL}/notificaciones/pendientes`);
+  if (!response.ok) throw new Error('Error al obtener notificaciones pendientes');
+  return response.json();
+};
+
+export const getNotificacionesRecientes = async () => {
+  const response = await fetch(`${API_URL}/notificaciones/recientes`);
+  if (!response.ok) throw new Error('Error al obtener notificaciones recientes');
+  return response.json();
+};
 
 
 
+// Agrega estas funciones al final de tu api.js
+
+// ========== FUNCIONES PARA GRÁFICOS DEL DASHBOARD ==========
+
+export const getVentasPorMes = async () => {
+  const response = await fetch(`${API_URL}/dashboard/ventas-por-mes`);
+  
+  if (!response.ok) {
+    throw new Error('Error al obtener ventas por mes');
+  }
+  
+  return response.json();
+};
+
+export const getVehiculosPorMarca = async () => {
+  const response = await fetch(`${API_URL}/dashboard/vehiculos-por-marca`);
+  
+  if (!response.ok) {
+    throw new Error('Error al obtener vehículos por marca');
+  }
+  
+  return response.json();
+};
+
+export const getVentasPorVendedor = async () => {
+  const response = await fetch(`${API_URL}/dashboard/ventas-por-vendedor`);
+  
+  if (!response.ok) {
+    throw new Error('Error al obtener ventas por vendedor');
+  }
+  
+  return response.json();
+};
 //actualizar estado 
 

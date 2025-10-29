@@ -430,3 +430,33 @@
 .error {
   color: #fa6238;
 }
+
+/* Botón Contactar Asesor */
+.btn-contactar-asesor {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  height: 3.5rem;
+  padding: 0 2rem;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-contactar-asesor:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-color: rgba(127, 19, 236, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(127, 19, 236, 0.2);
+}
+
+.btn-contactar-asesor .material-symbols-outlined {
+  font-size: 1.5rem;
+}

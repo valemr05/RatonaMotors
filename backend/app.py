@@ -901,6 +901,238 @@ def actualizar_estado_prueba(id):
     finally:
         close_db_connection(connection)
 
+# ========== ENDPOINTS DE NOTIFICACIONES ==========
+
+@app.route('/api/notificaciones/pendientes', methods=['GET'])
+def get_notificaciones_pendientes():
+    """Obtiene el conteo de notificaciones pendientes"""
+    connection = get_db_connection()
+    if not connection:
+        return jsonify({"error": "Error de conexión a la base de datos"}), 500
+    
+    try:
+        cursor = connection.cursor(dictionary=True)
+        
+        # Pruebas de manejo pendientes
+        cursor.execute("""
+            SELECT COUNT(*) as total
+            FROM pruebas_manejo
+            WHERE estado = 'pendiente'
+        """)
+        pruebas_pendientes = cursor.fetchone()['total']
+        
+        # Pruebas de manejo de hoy
+        cursor.execute("""
+            SELECT COUNT(*) as total
+            FROM pruebas_manejo
+            WHERE DATE(fecha_prueba) = CURDATE()
+            AND estado != 'cancelada'
+        """)
+        pruebas_hoy = cursor.fetchone()['total']
+        
+        # Nuevos clientes esta semana
+        cursor.execute("""
+            SELECT COUNT(*) as total
+            FROM clientes
+            WHERE fecha_registro >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+        """)
+        nuevos_clientes = cursor.fetchone()['total']
+        
+        cursor.close()
+        
+        return jsonify({
+            "pruebas_pendientes": pruebas_pendientes,
+            "pruebas_hoy": pruebas_hoy,
+            "nuevos_clientes": nuevos_clientes,
+            "total": pruebas_pendientes + pruebas_hoy
+        }), 200
+        
+    except Exception as e:
+        print(f"Error en get_notificaciones_pendientes: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+    finally:
+        close_db_connection(connection)
+
+
+@app.route('/api/notificaciones/recientes', methods=['GET'])
+def get_notificaciones_recientes():
+    """Obtiene las notificaciones recientes para mostrar"""
+    connection = get_db_connection()
+    if not connection:
+        return jsonify({"error": "Error de conexión a la base de datos"}), 500
+    
+    try:
+        cursor = connection.cursor(dictionary=True)
+        
+        notificaciones = []
+        
+        # Pruebas de manejo pendientes
+        cursor.execute("""
+            SELECT 
+                pm.id_prueba,
+                CONCAT(COALESCE(c.nombre, pm.nombre_solicitante), ' ', 
+                       COALESCE(c.apellido, pm.apellido_solicitante)) as nombre_cliente,
+                CONCAT(v.marca, ' ', v.modelo, ' ', v.año) as vehiculo,
+                pm.fecha_prueba,
+                pm.hora_prueba,
+                pm.fecha_solicitud,
+                'prueba_manejo' as tipo
+            FROM pruebas_manejo pm
+            JOIN vehiculos v ON pm.id_vehiculo = v.id_vehiculo
+            LEFT JOIN clientes c ON pm.id_cliente = c.id_cliente
+            WHERE pm.estado = 'pendiente'
+            ORDER BY pm.fecha_solicitud DESC
+            LIMIT 5
+        """)
+        
+        pruebas = cursor.fetchall()
+        for p in pruebas:
+            if p.get("hora_prueba") is not None:
+                p["hora_prueba"] = str(p["hora_prueba"])
+            notificaciones.append({
+                "id": p['id_prueba'],
+                "tipo": "prueba_pendiente",
+                "titulo": "Nueva Prueba de Manejo",
+                "mensaje": f"{p['nombre_cliente']} solicitó probar {p['vehiculo']}",
+                "fecha": p['fecha_solicitud'],
+                "icono": "drive_eta",
+                "color": "orange"
+            })
+        
+        # Pruebas de hoy
+        cursor.execute("""
+            SELECT 
+                pm.id_prueba,
+                CONCAT(COALESCE(c.nombre, pm.nombre_solicitante), ' ', 
+                       COALESCE(c.apellido, pm.apellido_solicitante)) as nombre_cliente,
+                CONCAT(v.marca, ' ', v.modelo) as vehiculo,
+                pm.hora_prueba,
+                pm.fecha_prueba
+            FROM pruebas_manejo pm
+            JOIN vehiculos v ON pm.id_vehiculo = v.id_vehiculo
+            LEFT JOIN clientes c ON pm.id_cliente = c.id_cliente
+            WHERE DATE(pm.fecha_prueba) = CURDATE()
+            AND pm.estado = 'confirmada'
+            ORDER BY pm.hora_prueba ASC
+            LIMIT 3
+        """)
+        
+        pruebas_hoy = cursor.fetchall()
+        for p in pruebas_hoy:
+            if p.get("hora_prueba") is not None:
+                p["hora_prueba"] = str(p["hora_prueba"])
+            notificaciones.append({
+                "id": p['id_prueba'],
+                "tipo": "prueba_hoy",
+                "titulo": "Prueba Programada Hoy",
+                "mensaje": f"{p['nombre_cliente']} - {p['vehiculo']} a las {p['hora_prueba']}",
+                "fecha": p['fecha_prueba'],
+                "icono": "schedule",
+                "color": "blue"
+            })
+        
+        cursor.close()
+        return jsonify(notificaciones), 200
+        
+    except Exception as e:
+        print(f"Error en get_notificaciones_recientes: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+    finally:
+        close_db_connection(connection)
+
+
+# ========== ENDPOINTS PARA GRÁFICOS DEL DASHBOARD ==========
+
+@app.route('/api/dashboard/ventas-por-mes', methods=['GET'])
+def get_ventas_por_mes():
+    """Obtiene las ventas agrupadas por mes (últimos 6 meses)"""
+    connection = get_db_connection()
+    if not connection:
+        return jsonify({"error": "Error de conexión a la base de datos"}), 500
+    
+    try:
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT 
+                DATE_FORMAT(fecha_venta, '%Y-%m') as mes,
+                DATE_FORMAT(fecha_venta, '%b %Y') as mes_nombre,
+                COUNT(*) as cantidad,
+                ROUND(SUM(precio_venta), 2) as total
+            FROM ventas
+            WHERE fecha_venta >= DATE_SUB(CURRENT_DATE(), INTERVAL 6 MONTH)
+            GROUP BY DATE_FORMAT(fecha_venta, '%Y-%m'), DATE_FORMAT(fecha_venta, '%b %Y')
+            ORDER BY mes ASC
+        """)
+        ventas = cursor.fetchall()
+        cursor.close()
+        
+        return jsonify(ventas), 200
+    except Exception as e:
+        print(f"Error en get_ventas_por_mes: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+    finally:
+        close_db_connection(connection)
+
+
+@app.route('/api/dashboard/vehiculos-por-marca', methods=['GET'])
+def get_vehiculos_por_marca():
+    """Obtiene la distribución de vehículos por marca"""
+    connection = get_db_connection()
+    if not connection:
+        return jsonify({"error": "Error de conexión a la base de datos"}), 500
+    
+    try:
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT 
+                marca as name,
+                COUNT(*) as value
+            FROM vehiculos
+            WHERE disponible = TRUE
+            GROUP BY marca
+            ORDER BY value DESC
+            LIMIT 10
+        """)
+        vehiculos = cursor.fetchall()
+        cursor.close()
+        
+        return jsonify(vehiculos), 200
+    except Exception as e:
+        print(f"Error en get_vehiculos_por_marca: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+    finally:
+        close_db_connection(connection)
+
+
+@app.route('/api/dashboard/ventas-por-vendedor', methods=['GET'])
+def get_ventas_por_vendedor():
+    """Obtiene las ventas por vendedor (últimos 3 meses)"""
+    connection = get_db_connection()
+    if not connection:
+        return jsonify({"error": "Error de conexión a la base de datos"}), 500
+    
+    try:
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT 
+                CONCAT(u.nombre, ' ', u.apellido) as vendedor,
+                COUNT(*) as cantidad,
+                ROUND(SUM(v.precio_venta), 2) as total
+            FROM ventas v
+            JOIN usuarios u ON v.id_usuario = u.id_usuario
+            WHERE v.fecha_venta >= DATE_SUB(CURRENT_DATE(), INTERVAL 3 MONTH)
+            GROUP BY u.id_usuario, vendedor
+            ORDER BY cantidad DESC
+        """)
+        ventas = cursor.fetchall()
+        cursor.close()
+        
+        return jsonify(ventas), 200
+    except Exception as e:
+        print(f"Error en get_ventas_por_vendedor: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+    finally:
+        close_db_connection(connection)
          
 if __name__ == '__main__':
     app.run(debug=True, port=5000, use_reloader=False)

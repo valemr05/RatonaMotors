@@ -1,9 +1,28 @@
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { getNotificacionesPendientes } from '../services/api';
 import './Navbar.css';
 
 function Navbar({ usuario, onLogout }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const [notificaciones, setNotificaciones] = useState({ total: 0 });
+
+  useEffect(() => {
+    const fetchNotificaciones = async () => {
+      try {
+        const data = await getNotificacionesPendientes();
+        setNotificaciones(data);
+      } catch (error) {
+        console.error('Error al cargar notificaciones:', error);
+      }
+    };
+
+    fetchNotificaciones();
+    const interval = setInterval(fetchNotificaciones, 30000); // Actualizar cada 30s
+
+    return () => clearInterval(interval);
+  }, []);
 
   // Definir items según el rol del usuario
   const getMenuItems = () => {
@@ -33,8 +52,13 @@ function Navbar({ usuario, onLogout }) {
       items.push({ path: '/empleados', label: 'Empleados', icon: 'manage_accounts' });
     }
 
-    // Pruebas de Manejo - Todos
-    items.push({ path: '/pruebas-manejo', label: 'Pruebas de Manejo', icon: 'drive_eta' });
+    // Pruebas de Manejo - Todos (CON BADGE)
+    items.push({ 
+      path: '/pruebas-manejo', 
+      label: 'Pruebas de Manejo', 
+      icon: 'drive_eta',
+      badge: notificaciones.pruebas_pendientes || 0
+    });
 
     return items;
   };
@@ -69,6 +93,10 @@ function Navbar({ usuario, onLogout }) {
               >
                 <span className="material-symbols-outlined">{item.icon}</span>
                 <p>{item.label}</p>
+                {/* AGREGAR BADGE AQUÍ */}
+                {item.badge > 0 && (
+                  <span className="navbar-badge">{item.badge}</span>
+                )}
               </a>
             ))}
           </nav>
